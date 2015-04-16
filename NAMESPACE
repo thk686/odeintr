@@ -1,0 +1,3 @@
+useDynLib(odeintr)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
