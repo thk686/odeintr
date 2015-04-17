@@ -36,7 +36,6 @@ List integrate_sys_(Function derivs, Function recfun, state_type init,
                     double duration, double step_size = 1.0,
                     double start = 0.0)
 {
-  List rec = recfun(init, start);
   rec_x.resize(0);
   rec_t.resize(0);
   Sys s(derivs);
