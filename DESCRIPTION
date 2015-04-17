@@ -1,11 +1,13 @@
 Package: odeintr
 Type: Package
-Title: What the package does (short line)
+Title: ODE solver using Rcpp and ODEINT
 Version: 1.0
 Date: 2015-02-13
-Author: Your Name
-Maintainer: Your Name <your@email.com>
-Description: More about what it does (maybe more than one line)
+Author: Timothy H. Keitt
+Maintainer: Timothy H. Keitt <tkeitt@gmail.com>
+Description: This package wraps the Boost ODEINT library for integration of differential equations.
+The ODE system can be defined in C++ and odeintr will compile and link a custom integrator function
+using Rcpp.
 License: GPL (>= 2)
 Imports: Rcpp (>= 0.11.4), BH
 LinkingTo: Rcpp, BH
