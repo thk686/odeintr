@@ -29,7 +29,7 @@ Numerically integrates an ODE system defined in R
 }
 \details{
 The system will be integrated from \code{start} to \code{start + duration}. The method
-is an error controlled 5th-order Dorman-Prince. The time step will be adjusted to within error
+is an error controlled 5th-order Dormand-Prince. The time step will be adjusted to within error
 tolerances (1e-6 absolute and relative).
 
 The observer can return arbitrary data in any form that can be coerced to a list. This could

@@ -47,7 +47,7 @@ NULL
 #' @param observer a function with signature function(x, t) returning values to store in output
 #' 
 #' @details The system will be integrated from \code{start} to \code{start + duration}. The method
-#' is an error controlled 5th-order Dorman-Prince. The time step will be adjusted to within error
+#' is an error controlled 5th-order Dormand-Prince. The time step will be adjusted to within error
 #' tolerances (1e-6 absolute and relative).
 #' 
 #' The observer can return arbitrary data in any form that can be coerced to a list. This could
@@ -138,7 +138,7 @@ integrate_sys = function(sys, init, duration,
 #' A \code{name_no_record} function is also generated for
 #' using in benchmarking.
 #' 
-#' The integration method is a 5th order Dorman-Prince algorithm
+#' The integration method is a 5th order Dormand-Prince algorithm
 #' with error tolerance (absolute and relative) of 1e-6. The
 #' step size is adaptive. The given step size is tried and a
 #' smaller or larger step size will be used depending on the

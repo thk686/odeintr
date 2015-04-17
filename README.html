@@ -102,7 +102,7 @@ plot(x[, c(2, 4)], type = 'l')</code></pre>
 <p>One of the main reasons the compiled code has the potential to be very fast is that ODEINT is a header-only library, so the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use “-O3” with gcc. See the R documentation on the user Makevars file.</p>
 <div id="to-do" class="section level3">
 <h3>To Do</h3>
-<p>The current code is incomplete. It would be great to wrap other features of the ODEINT library. A good start would be to support calling the observer function at specified times. This simply means calling other integration functions in ODEINT (e.g., integrate_const). There are also many other integration methods in ODEINT beyond the default Dorman-Prince 5th order method used in this package.</p>
+<p>The current code is incomplete. It would be great to wrap other features of the ODEINT library. A good start would be to support calling the observer function at specified times. This simply means calling other integration functions in ODEINT (e.g., integrate_const). There are also many other integration methods in ODEINT beyond the default Dormand-Prince 5th order method used in this package.</p>
 </div>
 
 

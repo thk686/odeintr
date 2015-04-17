@@ -45,7 +45,7 @@ in the first column and state in the remaining columns.
 A \code{name_no_record} function is also generated for
 using in benchmarking.
 
-The integration method is a 5th order Dorman-Prince algorithm
+The integration method is a 5th order Dormand-Prince algorithm
 with error tolerance (absolute and relative) of 1e-6. The
 step size is adaptive. The given step size is tried and a
 smaller or larger step size will be used depending on the
