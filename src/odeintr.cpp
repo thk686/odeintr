@@ -1,40 +1,50 @@
-#include "boost/numeric/odeint.hpp"
+#include "../inst/include/odeintr.h"
 
-#include <Rcpp.h>
-using namespace Rcpp;
-
-namespace odeint = boost::numeric::odeint;
+// Globals required because observer is passed by value
+static std::vector<List> rec_x;
+static std::vector<double> rec_t;
 
 struct Sys
 {
   Sys(Function f) : derivs(f) {}
-  void operator()(const NumericVector &x, NumericVector &dxdt, double t) const
+  void operator()(const state_type &x, state_type &dxdt, double t) const
   {
-    NumericVector res = derivs(x, t);
-    std::copy(res.begin(), res.end(), dxdt.begin());
+    auto d = as<state_type>(derivs(x, t));
+    if (d.size() != dxdt.size()) stop("Invalid dimensions");
+    std::copy(d.begin(), d.end(), dxdt.begin());
   }
   Function derivs;
 };
 
 struct Obs
 {
-  Obs(Function f, Function g) : rec(f), comb(g) {}
-  void operator()(const NumericVector &x, double t)
+  Obs(Function f) : recf(f) {}
+  void operator()(const state_type x, const double t)
   {
-    log = comb(log, rec(x, t));
+    List rec = recf(x, t);
+    if (rec.length() != 0)
+    {
+      rec_x.push_back(rec);
+      rec_t.push_back(t);
+    }
   }
-  SEXP get_log() { return wrap(log); }
-  Function rec, comb;
-  SEXP log;
+  Function recf;
 };
 
-//' @export
 // [[Rcpp::export]]
-SEXP integrate(Function derivs, Function obs, Function comb,
-               NumericVector init, double from, double to, double by)
+List integrate_sys_(Function derivs, Function recfun, state_type init,
+                    double duration, double step_size = 1.0,
+                    double start = 0.0)
 {
+  List rec = recfun(init, start);
+  rec_x.resize(0);
+  rec_t.resize(0);
   Sys s(derivs);
-  Obs o(obs, comb);
-  odeint::integrate(s, init, from, to, by, o);
-  return o.get_log();
+  Obs o(recfun);
+  odeint::integrate(s, init, start, start + duration, step_size, o);
+  List out;
+  out("t") = rec_t;
+  out("x") = rec_x;
+  return out;
 }
+

@@ -1,156 +1,310 @@
-make_sys = function(sys)
+#' Odeintr: Fast and Flexible Integration of Ordinary Differential Equations
+#'
+#' This package is a light-weight wrapper around the Boost ODEINT
+#' library. It allows one to specify an ODE system in a few lines
+#' of C++. This code is inserted into a template that is compiled.
+#' The resulting Rcpp function will integrate the system.
+#' 
+#' You can also specify the model as an R function. Unlike
+#' existing packages, you can also supply an observer function
+#' that can return arbitrary data structures.
+#' 
+#' The main function is \code{compile_sys}, which takes a
+#' snippet of C++ code calculating dervatives and compiles
+#' an integrator function.
+#' 
+#' The function \code{integrate_sys} accepts an R function
+#' defining the system and an observer function to record
+#' the output in a data frame or list.
+#' 
+#' @author Timothy H. Keitt \cr \url{http://www.keittlab.org/} \cr \cr
+#' 
+#' Timothy H. Keitt \email{tkeitt@@gmail.com} \cr
+#' 
+#' @references \url{http://github.com/thk686/odeintr}, \url{http://headmyshoulder.github.io/odeint-v2/}
+#' 
+#' @keywords package
+#' 
+#' @import Rcpp
+#' 
+#' @useDynLib odeintr
+#' 
+#' @docType package
+#' 
+#' @name odeintr
+#' @rdname odeintr_package
+NULL
+
+#' Integrate an ODE system using ODEINT
+#' 
+#' Numerically integrates an ODE system defined in R
+#' 
+#' @param dxdt a function with signature function(x, t)
+#' @param init the initial conditions
+#' @param duration time-span of the integration
+#' @param step_size the initial step size (adjusted internally)
+#' @param start the starting time
+#' @param observer a function with signature function(x, t) returning values to store in output
+#' 
+#' @details The system will be integrated from \code{start} to \code{start + duration}. The method
+#' is an error controlled 5th-order Dorman-Prince. The time step will be adjusted to within error
+#' tolerances (1e-6 absolute and relative).
+#' 
+#' The observer can return arbitrary data in any form that can be coerced to a list. This could
+#' be a single scalar value (no need to wrap the return with \code{list}!) or a list containing
+#' heterogeneous types. These will be inserted into the columns of the returned data frame. If
+#' the observer function returns a zero-length object (\code{NULL} or \code{list()}), then nothing
+#' will be recorded. You can use the \code{t} argument to selectively sample the output.
+#' 
+#' @return A data frame, \code{NULL} if no samples were recorded and a very complicated
+#' list-of-lists if the observer returned objects of different length.
+#' 
+#' @author Timothy H. Keitt
+#' 
+#' @examples
+#' \dontrun{
+#' # Lotka-Volterra predator-prey equations
+#' LV.sys = function(x, t)
+#' {
+#'    c(x[1] - 0.1 * x[1] * x[2],
+#'      0.05 * x[1] * x[2] - 0.5 * x[2])
+#' }
+#' null_rec = function(x, t) NULL
+#' system.time(integrate_sys(LV.sys, rep(1, 2), 1e3, observer = null_rec))
+#' named_rec = function(x, t) c(Prey = x[1], Predator = x[2])
+#' x = integrate_sys(LV.sys, rep(1, 2), 100, observer = named_rec)
+#' plot(x[, 2:3], type = "l")
+#' Sys.sleep(0.1)
+#' 
+#' # Lorenz model from odeint examples
+#' Lorenz.sys = function(x, t)
+#' {
+#'  c(10 * (x[2] - x[1]),
+#'    28 * x[1] - x[2] - x[1] * x[3],
+#'    -8/3 * x[3] + x[1] * x[2])
+#' }
+#' system.time(integrate_sys(Lorenz.sys, rep(1, 3), 1e2, obs = null_rec))
+#' x = integrate_sys(Lorenz.sys, rep(1, 3), 100)
+#' plot(x[, c(2, 4)], type = 'l')
+#' }
+#' @export
+integrate_sys = function(sys, init, duration,
+                         step_size = 1, start = 0,
+                         observer = function(x, t) x)
 {
-  res = "
-    struct Sys
-    {
-      void operator()(const std::vector<double> &x, std::vector<double> &dxdt, double t) const
-      {
-        __the_system__;
-      }
-    };
-  "
-  res = sub("__the_system__", sys, res)
-  return(res)
+  res = integrate_sys_(sys, observer, init, duration, step_size, start)
+  if (length(res[[1]]) == 0) return(NULL)
+  x = res[[2]]; out = list()
+  if (any(diff(sapply(x, length)) != 0)) return(res)
+  n = length(x[[1]]); length(out) = n + 1
+  for (i in 1:length(x)) for (j in 1:n)
+      out[[j + 1]][i] = x[[i]][[j]]
+  out[[1]] = res[[1]]
+  xnames = names(x[[1]])
+  if (is.null(xnames) || length(xnames) != length(x[[1]]))
+    xnames = paste0("x", 1:length(x[[1]]))
+  names(out) = c("t", xnames)
+  as.data.frame(out)
 }
-
-make_obs = function(state_type, rec, comb, get = "wrap(state)")
+  
+#' Compile ODE system
+#' 
+#' Generates an integrator using Rcpp
+#' 
+#' @param name the name of the generated integration function
+#' @param sys a string containing C++ expressions
+#' @param globals a string with global C++ declarations
+#' @param sys_dim length of the state vector
+#' @param ... passed to \code{\link{sourceCpp}}
+#' 
+#' @details C++ code is generated and compiled with
+#' \code{\link{sourceCpp}}. The returned function will
+#' integrate the system starting from a provided initial
+#' condition and initial time to a specified final time.
+#' An attempt is made to get the length of the state vector
+#' from the system definition. If this fails, the code will
+#' likely crash your R session. It is safer to specify
+#' \code{sys_dim} directly.
+#' 
+#' The signature of \code{name} is:
+#' 
+#' \code{name(initial_state, duration, step_size, start)}
+#' 
+#' where \code{duration} is the integration time, \code{step_size}
+#' is the time step (default = 1.0) and \code{start} is the
+#' starting time (default = 0.0). The
+#' return value from this function is a data frame with time
+#' in the first column and state in the remaining columns.
+#' A \code{name_no_record} function is also generated for
+#' using in benchmarking.
+#' 
+#' The integration method is a 5th order Dorman-Prince algorithm
+#' with error tolerance (absolute and relative) of 1e-6. The
+#' step size is adaptive. The given step size is tried and a
+#' smaller or larger step size will be used depending on the
+#' esimtated integration error. The time and system state are
+#' recorded after every step. The time increments will generally
+#' be variable.
+#' 
+#' The C++ expressions must index a state array of length
+#' \code{sys_dim}. The state array is \code{x} and the
+#' derivatives are \code{dxdt}. The first state value is
+#' \code{x[0]} and the first derivative is \code{dxdt[0]}.
+#' 
+#' The \code{globals} string can be arbitrary C++ code. You
+#' can set global named parameter values here, or you could
+#' specify exported Rcpp functions for manipulating or recording
+#' state.
+#' 
+#' @note The c++11 plugin is enabled.
+#' 
+#' Also, despite using an array as the state,
+#' even when it is length one, there is no performance penalty as the length
+#' of the state vector is known at compile time. Your compiler will optimize
+#' out any pointer dereferencing. You may get a large increase in performance
+#' by enabling function inlining and loop unrolling. For GCC, that is "-O3". Chances
+#' are that your R distribution uses "-O2". You can override this by copying each
+#' line containing "-O2" from your R distribution's Makeconf to .R/Makevars in
+#' your home directory replacing each instance of "-O2" with "-O3". You might
+#' be able to do this with environment variables. I have not been able to
+#' verify whether that works.
+#'  
+#' @return the C++ code invisibly
+#' 
+#' @author Timothy H. Keitt
+#' 
+#' @examples
+#' \dontrun{
+#' # Lotka-Volterra predator-prey equations
+#' LV.sys = '
+#'   dxdt[0] = x[0] - 0.1 * x[0] * x[1];
+#'   dxdt[1] = 0.05 * x[0] * x[1] - 0.5 * x[1];
+#' ' # LV.sys
+#' compile_sys("preypred", LV.sys)
+#' system.time(preypred_no_record(rep(1, 2), 1e6))
+#' x = preypred(rep(1, 2), 100)
+#' plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator")
+#' Sys.sleep(0.1)
+#' 
+#' # Lorenz model from odeint examples
+#' Lorenz.globals = '
+#'   const double sigma_ = 10.0;
+#'   const double R_ = 28.0;
+#'   const double b_ = 8.0 / 3.0;
+#' ' # Lorenz.globals
+#' Lorenz.sys = '
+#'   dxdt[0] = sigma_ * (x[1] - x[0]);
+#'   dxdt[1] = R_ * x[0] - x[1] - x[0] * x[2];
+#'   dxdt[2] = -b_ * x[2] + x[0] * x[1];
+#' ' # Lorenz.sys
+#' compile_sys("lorenz", Lorenz.sys, Lorenz.globals)
+#' system.time(lorenz_no_record(rep(1, 3), 1e5))
+#' x = lorenz(rep(1, 3), 100)
+#' plot(x[, c(2, 4)], type = 'l')
+#' }
+#' @export
+compile_sys = function(name, sys, globals = "", sys_dim = -1, ...)
 {
-  res = "
-    struct Obs
-    {
-      void operator()(const std::vector<double> &x, double t)
-      {
-        state = comb(state, rec(x, t));
-      }
-      __the_recorder__;
-      __the_combinator__;
-      SEXP get() { __the_getter__; }
-      __the_state_type__ state;
-    };
-  "
-  res = gsub("__the_state_type__", state_type, res)
-  res = sub("__the_combinator__", comb, res)
-  res = sub("__the_getter__", get, res)
-  return(res)
-}
-
-matrix_observer = function(state_size)
-{
-  res = "
-    struct Obs
-    {
-      Obs() : state(__state_size__ + 1) {}
-      void operator()(const std::vector<double> &x, double t)
-      {
-        if (x.size() != __state_size__) stop(\"Wrong state size\");
-        for (int i = 0; i != __state_size__; ++i)
-          state[i + 1].push_back(x[i]);
-        state[0].push_back(t);
-      }
-      SEXP get() { Rcpp::wrap(state); }
-      std::vector<std::vector<double> > state;
-    };
-  "
-  res = gsub("__state_size__", state_size, res)
-  return(res)  
-}
-
-make_code = function(sys, obs, fname = "ode")
-{
-  res = "
-    #include <Rcpp.h>
-    using namespace Rcpp;
-
-    // [[Rcpp::depends(BH)]]
-    #include \"boost/numeric/odeint.hpp\"
-    namespace odeint = boost::numeric::odeint;
-
-    __the_system__
-
-    __the_observer__
-
-    //' @export
-    // [[Rcpp::export]]
-    SEXP __the_function_name__(std::vector<double> init, double t0, double tn, double ts)
-    {
-      Sys s;
-      Obs o;
-      odeint::integrate(s, init, t0, tn, ts, o);
-      return Rcpp::wrap(o.get());
-    }
-  "
-  res = sub("__the_system__", sys, res)
-  res = sub("__the_observer__", obs, res)
-  res = sub("__the_function_name__", fname, res)
-  return(res)
-}
-
-compile_sys = function(sys_dim = 1,
-                       sys = "dxdt[0] = x[0] * (1 - x[0])",
-                       funcname = "run_it",
-                       ...)
-{
+  if (sys_dim < 1) sys_dim = get_sys_dim(sys)
   code = array_sys_template()
-  code = sub("__FUNCNAME__", funcname, code)
+  code = gsub("__FUNCNAME__", name, code)
   code = sub("__SYS_SIZE__", sys_dim, code)
+  code = sub("__GLOBALS__", globals, code)
   code = sub("__SYS__", sys, code)
   Rcpp::sourceCpp(code = code, ...)
   invisible(code)
 }
 
+get_sys_dim = function(x)
+{
+  matches = gregexpr("dxdt\\[\\d\\]", x, perl = TRUE)
+  lens = attr(matches[[1]], "match.length") - 7L
+  starts = unlist(matches) + 5L
+  indices = rep(NA, length(starts))
+  for (i in seq(along = indices))
+    indices[i] = substr(x, starts[i], starts[i] + lens)
+  return(max(as.integer(indices)) + 1L)
+}
+
 array_sys_template = function()
 {
   '
-    #include <Rcpp.h>
-    using namespace Rcpp;
-    // [[Rcpp::plugins(cpp11)]]
-    
-    // [[Rcpp::depends(BH)]]
-    #include "boost/numeric/odeint.hpp"
-    namespace odeint = boost::numeric::odeint;
-    
+  #include <Rcpp.h>
+  // [[Rcpp::plugins(cpp11)]]
+  
+  // [[Rcpp::depends(BH)]]
+  #include "boost/numeric/odeint.hpp"
+  namespace odeint = boost::numeric::odeint;
+  
+  namespace odeintr
+  {
     static const std::size_t N = __SYS_SIZE__;
     
     using state_type = std::array<double, N>;
     using vec_type = std::vector<double>;
     
-    static std::array<vec_type, N> m_x;
-    static std::vector<double> m_t;
+    static std::array<vec_type, N> rec_x;
+    static std::vector<double> rec_t;
+    
+    __GLOBALS__;
     
     static void
     sys(const state_type x, state_type &dxdt, const double t)
     {
       __SYS__;
     }
-      
+  
     static void
     obs(const state_type x, const double t)
     {
       for (int i = 0; i != N; ++i)
-        m_x[i].push_back(x[i]);
-      m_t.push_back(t);
+        rec_x[i].push_back(x[i]);
+      rec_t.push_back(t);
     }
-      
-    // [[Rcpp::export]]
-    List __FUNCNAME__(NumericVector init,
-                      double from, double to,
-                      double by)
+  }; // namespace odeintr
+  
+  // [[Rcpp::export]]
+  Rcpp::List __FUNCNAME__(Rcpp::NumericVector init,
+                          double duration,
+                          double step_size = 1.0,
+                          double start = 0.0)
+  {
+    if (init.size() != odeintr::N)
+      Rcpp::stop("Invalid initial state");
+    odeintr::state_type inival;
+    for (int i = 0; i != odeintr::N; ++i)
     {
-      if (init.size() != N)
-        stop("Invalid initial state");
-      state_type inival;
-      for (int i = 0; i != N; ++i) inival[i] = init[i];
-      odeint::integrate(sys, inival, from, to, by, obs);
-      List out;
-      out("t") = wrap(m_t);
-      for (int i = 0; i != N; ++i)
-      {
-        auto cnam = std::string("x") + std::to_string(i + 1);
-        out(cnam) = wrap(m_x[i]);
-      }
-      out.attr("row.names") = IntegerVector::create(NA_INTEGER, -m_t.size());
-      out.attr("class") = "data.frame";
-      return out;
+      inival[i] = init[i];
+      odeintr::rec_x[i].resize(0);
     }
-  '
+    odeintr::rec_t.resize(0);
+    odeint::integrate(odeintr::sys, inival,
+                      start, start + duration, step_size,
+                      odeintr::obs);
+    Rcpp::List out;
+    out("t") = Rcpp::wrap(odeintr::rec_t);
+    for (int i = 0; i != odeintr::N; ++i)
+    {
+      auto cnam = std::string("x") + std::to_string(i + 1);
+      out(cnam) = Rcpp::wrap(odeintr::rec_x[i]);
+    }
+    out.attr("class") = "data.frame";
+    int rows_out = odeintr::rec_t.size();
+    auto rn = Rcpp::IntegerVector::create(NA_INTEGER, -rows_out);
+    out.attr("row.names") = rn;
+    return out;
+  }
+
+  // [[Rcpp::export]]
+  void
+  __FUNCNAME___no_record(Rcpp::NumericVector init,
+                         double duration,
+                         double step_size = 1.0,
+                         double start = 0.0)
+  {
+    if (init.size() != odeintr::N) Rcpp::stop("Invalid initial state");
+    odeintr::state_type inival;
+    for (int i = 0; i != odeintr::N; ++i) inival[i] = init[i];
+    odeint::integrate(odeintr::sys, inival, start, start + duration, step_size);
+  }'
 }
