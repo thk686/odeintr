@@ -61,6 +61,8 @@ NULL
 #' 
 #' @author Timothy H. Keitt
 #' 
+#' @seealso \code{\link{compile_sys}}
+#' 
 #' @examples
 #' \dontrun{
 #' # Lotka-Volterra predator-prey equations
@@ -74,7 +76,7 @@ NULL
 #' named_rec = function(x, t) c(Prey = x[1], Predator = x[2])
 #' x = integrate_sys(LV.sys, rep(1, 2), 100, observer = named_rec)
 #' plot(x[, 2:3], type = "l")
-#' Sys.sleep(0.1)
+#' Sys.sleep(0.5)
 #' 
 #' # Lorenz model from odeint examples
 #' Lorenz.sys = function(x, t)
@@ -115,6 +117,7 @@ integrate_sys = function(sys, init, duration,
 #' @param sys a string containing C++ expressions
 #' @param globals a string with global C++ declarations
 #' @param sys_dim length of the state vector
+#' @param compile if false, just return the code
 #' @param ... passed to \code{\link{sourceCpp}}
 #' 
 #' @details C++ code is generated and compiled with
@@ -151,6 +154,14 @@ integrate_sys = function(sys, init, duration,
 #' derivatives are \code{dxdt}. The first state value is
 #' \code{x[0]} and the first derivative is \code{dxdt[0]}.
 #' 
+#' In the case you use bare \code{dxdt} and \code{x}, an
+#' attempt will be made to append \code{[0]} to these
+#' variables. This can fail, so do not rely on it. It
+#' requires that \code{dxdt} and \code{x} are adjacent
+#' to a "non-word" character as defined by perl regular
+#' expressions. This will also fail if you set \code{sys_dim}
+#' to a positive value.
+#' 
 #' The \code{globals} string can be arbitrary C++ code. You
 #' can set global named parameter values here, or you could
 #' specify exported Rcpp functions for manipulating or recording
@@ -167,14 +178,21 @@ integrate_sys = function(sys, init, duration,
 #' line containing "-O2" from your R distribution's Makeconf to .R/Makevars in
 #' your home directory replacing each instance of "-O2" with "-O3". You might
 #' be able to do this with environment variables. I have not been able to
-#' verify whether that works.
+#' verify whether that works. You might also try \code{\link{set_optimization}}.
 #'  
 #' @return the C++ code invisibly
 #' 
 #' @author Timothy H. Keitt
 #' 
+#' @seealso \code{\link{set_optimization}}, \code{\link{integrate_sys}}
+#' 
 #' @examples
 #' \dontrun{
+#' # Logistic growth
+#' compile_sys("logistic", "dxdt = x * (1 - x)")
+#' plot(logistic(0.001, 15), type = "l", lwd = 2)
+#' Sys.sleep(0.5)
+#' 
 #' # Lotka-Volterra predator-prey equations
 #' LV.sys = '
 #'   dxdt[0] = x[0] - 0.1 * x[0] * x[1];
@@ -184,7 +202,7 @@ integrate_sys = function(sys, init, duration,
 #' system.time(preypred_no_record(rep(1, 2), 1e6))
 #' x = preypred(rep(1, 2), 100)
 #' plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator")
-#' Sys.sleep(0.1)
+#' Sys.sleep(0.5)
 #' 
 #' # Lorenz model from odeint examples
 #' Lorenz.globals = '
@@ -203,16 +221,30 @@ integrate_sys = function(sys, init, duration,
 #' plot(x[, c(2, 4)], type = 'l')
 #' }
 #' @export
-compile_sys = function(name, sys, globals = "", sys_dim = -1, ...)
+compile_sys = function(name, sys, globals = "", sys_dim = -1L,
+                       compile = TRUE, ...)
 {
-  if (sys_dim < 1) sys_dim = get_sys_dim(sys)
+  if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
+  if (is.na(sys_dim))
+  {
+    sys = gsub("\\Wdxdt|dxdt\\W", "dxdt[0]", sys, perl = TRUE)
+    sys = gsub("\\Wx|x\\W", "x[0]", sys, perl = TRUE)
+    sys_dim = 1
+  }
   code = array_sys_template()
   code = gsub("__FUNCNAME__", name, code)
-  code = sub("__SYS_SIZE__", sys_dim, code)
+  code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
   code = sub("__GLOBALS__", globals, code)
   code = sub("__SYS__", sys, code)
-  Rcpp::sourceCpp(code = code, ...)
-  invisible(code)
+  if (compile)
+  {
+    Rcpp::sourceCpp(code = code, ...)
+    return(invisible(code))
+  }
+  else
+  {
+    return(code)
+  }
 }
 
 get_sys_dim = function(x)
@@ -307,4 +339,65 @@ array_sys_template = function()
     for (int i = 0; i != odeintr::N; ++i) inival[i] = init[i];
     odeint::integrate(odeintr::sys, inival, start, start + duration, step_size);
   }'
+}
+
+substitute_opt_level = function(flags, level, omit.debug)
+{
+  flags = gsub("-O\\d+", paste0("-O", level), flags, perl = TRUE)
+  if (omit.debug) flags = gsub("\\w*-g\\w*", "", flags, perl = TRUE)
+  flags = gsub("^\\s+|\\s+$", "", flags, perl = TRUE)
+  return(flags)
+}
+
+process_flags = function(name, level, omit.debug)
+{
+  con = pipe(paste("R CMD config", name))
+  flags = readLines(con); close(con)
+  flags = substitute_opt_level(flags, level, omit.debug)
+  paste0(name, "=", flags)
+}
+
+.opt.env.vars = c("CFLAGS", "FFLAGS", "FCFLAGS", "CXXFLAGS", "CXX1XFLAGS")
+
+#' Set compiler optimization
+#' 
+#' Write a user Makevars with updated optimization level
+#' 
+#' @param level the compiler optimization level (-O<level>)
+#' @param omit.debug if ture, remove "-g" from flags
+#' @param overwrite if true, overwrite existing Makevars file
+#' 
+#' @details This function will change the optimization flags used
+#' when compiling code. It will write the file "Makevars" to the
+#' ".R" directory in your "$HOME" directory. These setting will
+#' effect all subsequent compiles, even package installation,
+#' unless you remove or edit the "Makevars" file.
+#' 
+#' This function assumes that your compiler uses "-O" to
+#' indicate optimization level and "-g" to indicate that
+#' the compiler should issue debugging symbols.
+#' 
+#' @note Don't go overboard. Levels greater than 3 can be
+#' hazardous to numerical accuracy. Some packages will not
+#' compile or will give inaccurate results for levels above 2.
+#' 
+#' @author Timothy H. Keitt
+#' 
+#' @seealso \code{\link{compile_sys}}
+#' 
+#' @export
+set_optimization = function(level = 3, omit.debug = FALSE, overwrite = FALSE)
+{
+  user_dir = file.path(Sys.getenv("HOME"), ".R")
+  if (!file.exists(user_dir)) dir.create(user_dir)
+  makevars = file.path(user_dir, "Makevars")
+  if (overwrite && file.exists(makevars)) unlink(makevars)
+  if (file.exists(makevars))
+    stop("User Makevars file exists; use overwrite = TRUE")
+  lapply(.opt.env.vars, function(x)
+    {
+      cat(process_flags(x, level, omit.debug), "\n",
+          file = makevars, append = TRUE)
+    })
+  invisible(.opt.env.vars)
 }
