@@ -51,7 +51,7 @@ system.time(integrate_sys(LV.sys, rep(1, 2), 1e3, observer = null_rec))
 named_rec = function(x, t) c(Prey = x[1], Predator = x[2])
 x = integrate_sys(LV.sys, rep(1, 2), 100, observer = named_rec)
 plot(x[, 2:3], type = "l")
-Sys.sleep(0.1)
+Sys.sleep(0.5)
 
 # Lorenz model from odeint examples
 Lorenz.sys = function(x, t)
@@ -67,5 +67,8 @@ plot(x[, c(2, 4)], type = 'l')
 }
 \author{
 Timothy H. Keitt
+}
+\seealso{
+\code{\link{compile_sys}}
 }
 

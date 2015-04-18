@@ -4,7 +4,7 @@
 \alias{compile_sys}
 \title{Compile ODE system}
 \usage{
-compile_sys(name, sys, globals = "", sys_dim = -1, ...)
+compile_sys(name, sys, globals = "", sys_dim = -1L, compile = TRUE, ...)
 }
 \arguments{
 \item{name}{the name of the generated integration function}
@@ -14,6 +14,8 @@ compile_sys(name, sys, globals = "", sys_dim = -1, ...)
 \item{globals}{a string with global C++ declarations}
 
 \item{sys_dim}{length of the state vector}
+
+\item{compile}{if false, just return the code}
 
 \item{...}{passed to \code{\link{sourceCpp}}}
 }
@@ -58,6 +60,14 @@ The C++ expressions must index a state array of length
 derivatives are \code{dxdt}. The first state value is
 \code{x[0]} and the first derivative is \code{dxdt[0]}.
 
+In the case you use bare \code{dxdt} and \code{x}, an
+attempt will be made to append \code{[0]} to these
+variables. This can fail, so do not rely on it. It
+requires that \code{dxdt} and \code{x} are adjacent
+to a "non-word" character as defined by perl regular
+expressions. This will also fail if you set \code{sys_dim}
+to a positive value.
+
 The \code{globals} string can be arbitrary C++ code. You
 can set global named parameter values here, or you could
 specify exported Rcpp functions for manipulating or recording
@@ -75,10 +85,15 @@ are that your R distribution uses "-O2". You can override this by copying each
 line containing "-O2" from your R distribution's Makeconf to .R/Makevars in
 your home directory replacing each instance of "-O2" with "-O3". You might
 be able to do this with environment variables. I have not been able to
-verify whether that works.
+verify whether that works. You might also try \code{\link{set_optimization}}.
 }
 \examples{
 \dontrun{
+# Logistic growth
+compile_sys("logistic", "dxdt = x * (1 - x)")
+plot(logistic(0.001, 15), type = "l", lwd = 2)
+Sys.sleep(0.5)
+
 # Lotka-Volterra predator-prey equations
 LV.sys = '
   dxdt[0] = x[0] - 0.1 * x[0] * x[1];
@@ -88,7 +103,7 @@ compile_sys("preypred", LV.sys)
 system.time(preypred_no_record(rep(1, 2), 1e6))
 x = preypred(rep(1, 2), 100)
 plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator")
-Sys.sleep(0.1)
+Sys.sleep(0.5)
 
 # Lorenz model from odeint examples
 Lorenz.globals = '
@@ -109,5 +124,8 @@ plot(x[, c(2, 4)], type = 'l')
 }
 \author{
 Timothy H. Keitt
+}
+\seealso{
+\code{\link{set_optimization}}, \code{\link{integrate_sys}}
 }
 
