@@ -141,6 +141,10 @@ integrate_sys = function(sys, init, duration,
 #' A \code{name_no_record} function is also generated for
 #' using in benchmarking.
 #' 
+#' A second function, \code{name_no_record}, is also generated.
+#' This function does not take an observer and will return the
+#' approximate solution at the end of the integration.
+#' 
 #' The integration method is a 5th order Dormand-Prince algorithm
 #' with error tolerance (absolute and relative) of 1e-6. The
 #' step size is adaptive. The given step size is tried and a
@@ -229,7 +233,7 @@ compile_sys = function(name, sys, globals = "", sys_dim = -1L,
   {
     sys = gsub("\\Wdxdt|dxdt\\W", "dxdt[0]", sys, perl = TRUE)
     sys = gsub("\\Wx|x\\W", "x[0]", sys, perl = TRUE)
-    sys_dim = 1
+    sys_dim = 1L
   }
   code = array_sys_template()
   code = gsub("__FUNCNAME__", name, code)
@@ -328,7 +332,7 @@ array_sys_template = function()
   }
 
   // [[Rcpp::export]]
-  void
+  std::vector<double>
   __FUNCNAME___no_record(Rcpp::NumericVector init,
                          double duration,
                          double step_size = 1.0,
@@ -338,6 +342,7 @@ array_sys_template = function()
     odeintr::state_type inival;
     for (int i = 0; i != odeintr::N; ++i) inival[i] = init[i];
     odeint::integrate(odeintr::sys, inival, start, start + duration, step_size);
+    return std::vector<double>(inival.begin(), inival.end());
   }'
 }
 
