@@ -47,6 +47,10 @@ in the first column and state in the remaining columns.
 A \code{name_no_record} function is also generated for
 using in benchmarking.
 
+A second function, \code{name_no_record}, is also generated.
+This function does not take an observer and will return the
+approximate solution at the end of the integration.
+
 The integration method is a 5th order Dormand-Prince algorithm
 with error tolerance (absolute and relative) of 1e-6. The
 step size is adaptive. The given step size is tried and a
