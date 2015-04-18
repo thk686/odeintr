@@ -2,5 +2,6 @@
 
 export(compile_sys)
 export(integrate_sys)
+export(set_optimization)
 import(Rcpp)
 useDynLib(odeintr)
