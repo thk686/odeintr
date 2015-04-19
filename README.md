@@ -3,9 +3,9 @@ Timothy H. Keitt
 04/17/2015  
 
 The odeintr is package for integrating differential equations in R. The integration engine is
-the [Boost ODEINT package](http://www.odeint.com). Some important features:
+the [Boost ODEINT package](http://www.odeint.com). Some features:
 
-1. You can specify your system in C++ and odeintr will compile and link custom integrator
+1. You can specify your system in C++ and odeintr will compile and link a custom integrator
 1. A function that will write a user Makevars file with specified compiler
 optimization level
 1. 1-dimensional systems can omit C++ array indexing
@@ -15,8 +15,8 @@ Some examples:
 
 ```r
 library(odeintr)
-sys = function(x, t) x * (1 - x)
-y = integrate_sys(sys, 0.001, 15)
+dxdt = function(x, t) x * (1 - x)
+y = integrate_sys(dxdt, 0.001, 15)
 plot(y, type = "l", lwd = 3, col = "steelblue")
 ```
 
@@ -30,9 +30,9 @@ plot(logistic(0.001, 15), type = "l", lwd = "3", col = "steelblue")
 ![](README_files/figure-html/unnamed-chunk-1-2.png) 
 
 ```r
-sys = function(x, t) c(x[1] - x[1] * x[2], x[1] * x[2] - x[2])
+dxdt = function(x, t) c(x[1] - x[1] * x[2], x[1] * x[2] - x[2])
 obs = function(x, t) c(Prey = x[1], Predator = x[2])
-y = integrate_sys(sys, rep(2, 2), 20, observer = obs)
+y = integrate_sys(dxdt, rep(2, 2), 20, observer = obs)
 plot(y[, c(2, 3)], type = "l", lwd = 2, col = "steelblue")
 ```
 
