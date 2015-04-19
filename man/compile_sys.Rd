@@ -4,7 +4,8 @@
 \alias{compile_sys}
 \title{Compile ODE system}
 \usage{
-compile_sys(name, sys, globals = "", sys_dim = -1L, compile = TRUE, ...)
+compile_sys(name, sys, globals = "", headers = "", footers = "",
+  sys_dim = -1L, compile = TRUE, ...)
 }
 \arguments{
 \item{name}{the name of the generated integration function}
@@ -12,6 +13,10 @@ compile_sys(name, sys, globals = "", sys_dim = -1L, compile = TRUE, ...)
 \item{sys}{a string containing C++ expressions}
 
 \item{globals}{a string with global C++ declarations}
+
+\item{headers}{code to appear before the \code{odeintr} namespace}
+
+\item{footers}{code to appear after the \code{odeintr} namespace}
 
 \item{sys_dim}{length of the state vector}
 
@@ -44,12 +49,12 @@ is the time step (default = 1.0) and \code{start} is the
 starting time (default = 0.0). The
 return value from this function is a data frame with time
 in the first column and state in the remaining columns.
-A \code{name_no_record} function is also generated for
-using in benchmarking.
 
 A second function, \code{name_no_record}, is also generated.
 This function does not take an observer and will return the
-approximate solution at the end of the integration.
+approximate solution at the end of the integration. Use this
+for benchmarking or discarding transients (result can be used
+as the initial condition for a subsequent call).
 
 The integration method is a 5th order Dormand-Prince algorithm
 with error tolerance (absolute and relative) of 1e-6. The
@@ -73,9 +78,16 @@ expressions. This will also fail if you set \code{sys_dim}
 to a positive value.
 
 The \code{globals} string can be arbitrary C++ code. You
-can set global named parameter values here, or you could
-specify exported Rcpp functions for manipulating or recording
-state.
+can set global named parameter values here. Note that
+these will be defined within the \code{odeintr} namespace.
+
+You can insert arbitrary code compiled outside the \code{odeintr}
+names space using \code{headers} and \code{footers}. This code
+can be anything compatible with Rcpp. You could for example
+define exported Rcpp functions that set simulation paramters.
+\code{headers} is inserted right after the Rcpp and ODEINT
+includes. \code{footers} is inserted at the end of the
+code.
 }
 \note{
 The c++11 plugin is enabled.
