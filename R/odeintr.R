@@ -116,6 +116,8 @@ integrate_sys = function(sys, init, duration,
 #' @param name the name of the generated integration function
 #' @param sys a string containing C++ expressions
 #' @param globals a string with global C++ declarations
+#' @param headers code to appear before the \code{odeintr} namespace
+#' @param footers code to appear after the \code{odeintr} namespace
 #' @param sys_dim length of the state vector
 #' @param compile if false, just return the code
 #' @param ... passed to \code{\link{sourceCpp}}
@@ -138,12 +140,12 @@ integrate_sys = function(sys, init, duration,
 #' starting time (default = 0.0). The
 #' return value from this function is a data frame with time
 #' in the first column and state in the remaining columns.
-#' A \code{name_no_record} function is also generated for
-#' using in benchmarking.
 #' 
 #' A second function, \code{name_no_record}, is also generated.
 #' This function does not take an observer and will return the
-#' approximate solution at the end of the integration.
+#' approximate solution at the end of the integration. Use this
+#' for benchmarking or discarding transients (result can be used
+#' as the initial condition for a subsequent call).
 #' 
 #' The integration method is a 5th order Dormand-Prince algorithm
 #' with error tolerance (absolute and relative) of 1e-6. The
@@ -167,9 +169,16 @@ integrate_sys = function(sys, init, duration,
 #' to a positive value.
 #' 
 #' The \code{globals} string can be arbitrary C++ code. You
-#' can set global named parameter values here, or you could
-#' specify exported Rcpp functions for manipulating or recording
-#' state.
+#' can set global named parameter values here. Note that
+#' these will be defined within the \code{odeintr} namespace.
+#' 
+#' You can insert arbitrary code compiled outside the \code{odeintr}
+#' names space using \code{headers} and \code{footers}. This code
+#' can be anything compatible with Rcpp. You could for example
+#' define exported Rcpp functions that set simulation paramters.
+#' \code{headers} is inserted right after the Rcpp and ODEINT
+#' includes. \code{footers} is inserted at the end of the
+#' code.
 #' 
 #' @note The c++11 plugin is enabled.
 #' 
@@ -225,8 +234,13 @@ integrate_sys = function(sys, init, duration,
 #' plot(x[, c(2, 4)], type = 'l')
 #' }
 #' @export
-compile_sys = function(name, sys, globals = "", sys_dim = -1L,
-                       compile = TRUE, ...)
+compile_sys = function(name, sys,
+                       globals = "", 
+                       headers = "",
+                       footers = "",
+                       sys_dim = -1L,
+                       compile = TRUE,
+                       ...)
 {
   if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
   if (is.na(sys_dim))
@@ -240,6 +254,8 @@ compile_sys = function(name, sys, globals = "", sys_dim = -1L,
   code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
   code = sub("__GLOBALS__", globals, code)
   code = sub("__SYS__", sys, code)
+  code = sub("__HEADERS__", headers, code)
+  code = sub("__FOOTERS__", footers, code)
   if (compile)
   {
     Rcpp::sourceCpp(code = code, ...)
@@ -271,6 +287,8 @@ array_sys_template = function()
   // [[Rcpp::depends(BH)]]
   #include "boost/numeric/odeint.hpp"
   namespace odeint = boost::numeric::odeint;
+
+  __HEADERS__;
   
   namespace odeintr
   {
@@ -343,7 +361,9 @@ array_sys_template = function()
     for (int i = 0; i != odeintr::N; ++i) inival[i] = init[i];
     odeint::integrate(odeintr::sys, inival, start, start + duration, step_size);
     return std::vector<double>(inival.begin(), inival.end());
-  }'
+  }
+  
+  __FOOTERS__;'
 }
 
 substitute_opt_level = function(flags, level, omit.debug)
