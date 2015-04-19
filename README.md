@@ -67,5 +67,5 @@ The current code is incomplete. It would be great to wrap other features of the 
 ### Installation
 
 ```
-devtools::install_github("odeintr", "thk686")
+devtools::install_github("thk686/odeintr")
 ```
