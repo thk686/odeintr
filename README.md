@@ -11,7 +11,8 @@ optimization level
 1. 1-dimensional systems can omit C++ array indexing
 2. If you define your system in R code, you can provide a custom observer function that can record arbitrary information after each integration step
 
-Some examples:
+### Examples
+
 
 ```r
 library(odeintr)
@@ -57,12 +58,30 @@ plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 
 ![](README_files/figure-html/unnamed-chunk-1-4.png) 
 
+### Performance
+
 One of the main reasons the compiled code has the potential to be very fast is that ODEINT is a header-only library, so the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
 optimization level.)
 
+Here are some timings on a relatively fast test system:
+
+```r
+# run without observer, returns end state
+system.time(lorenz_no_record(rep(1, 3), 1e6))
+```
+
+```
+##    user  system elapsed 
+##   9.330   0.009   9.360
+```
+
 ### To Do
 
-The current code is incomplete. It would be great to wrap other features of the ODEINT library. A good start would be to support calling the observer function at specified times. This simply means calling other integration functions in ODEINT (e.g., integrate_const). There are also many other integration methods in ODEINT beyond the default Dormand-Prince 5th order method used in this package.
+1. Add additional integration methods from odeint
+1. Extend customized observer to compiled code
+1. Allow user to set tolerances
+
+Pull requests are welcome.
 
 ### Installation
 
