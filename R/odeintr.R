@@ -75,7 +75,7 @@ NULL
 #' system.time(integrate_sys(LV.sys, rep(1, 2), 1e3, observer = null_rec))
 #' named_rec = function(x, t) c(Prey = x[1], Predator = x[2])
 #' x = integrate_sys(LV.sys, rep(1, 2), 100, observer = named_rec)
-#' plot(x[, 2:3], type = "l")
+#' plot(x[, 2:3], type = "l", lwd = 3, col = "steelblue")
 #' Sys.sleep(0.5)
 #' 
 #' # Lorenz model from odeint examples
@@ -87,7 +87,7 @@ NULL
 #' }
 #' system.time(integrate_sys(Lorenz.sys, rep(1, 3), 1e2, obs = null_rec))
 #' x = integrate_sys(Lorenz.sys, rep(1, 3), 100)
-#' plot(x[, c(2, 4)], type = 'l')
+#' plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 #' }
 #' @export
 integrate_sys = function(sys, init, duration,
@@ -203,7 +203,7 @@ integrate_sys = function(sys, init, duration,
 #' \dontrun{
 #' # Logistic growth
 #' compile_sys("logistic", "dxdt = x * (1 - x)")
-#' plot(logistic(0.001, 15), type = "l", lwd = 2)
+#' plot(logistic(0.001, 15), type = "l", lwd = 2, col = "steelblue")
 #' Sys.sleep(0.5)
 #' 
 #' # Lotka-Volterra predator-prey equations
@@ -214,7 +214,7 @@ integrate_sys = function(sys, init, duration,
 #' compile_sys("preypred", LV.sys)
 #' system.time(preypred_no_record(rep(1, 2), 1e6))
 #' x = preypred(rep(1, 2), 100)
-#' plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator")
+#' plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator", col = "steelblue")
 #' Sys.sleep(0.5)
 #' 
 #' # Lorenz model from odeint examples
@@ -231,7 +231,7 @@ integrate_sys = function(sys, init, duration,
 #' compile_sys("lorenz", Lorenz.sys, Lorenz.globals)
 #' system.time(lorenz_no_record(rep(1, 3), 1e5))
 #' x = lorenz(rep(1, 3), 100)
-#' plot(x[, c(2, 4)], type = 'l')
+#' plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 #' }
 #' @export
 compile_sys = function(name, sys,
@@ -326,11 +326,8 @@ array_sys_template = function()
     if (init.size() != odeintr::N)
       Rcpp::stop("Invalid initial state");
     odeintr::state_type inival;
-    for (int i = 0; i != odeintr::N; ++i)
-    {
-      inival[i] = init[i];
-      odeintr::rec_x[i].resize(0);
-    }
+    std::copy(init.begin(), init.end(), inival.begin());
+    for (auto &i : odeintr::rec_x) i.resize(0);
     odeintr::rec_t.resize(0);
     odeint::integrate(odeintr::sys, inival,
                       start, start + duration, step_size,
@@ -358,12 +355,13 @@ array_sys_template = function()
   {
     if (init.size() != odeintr::N) Rcpp::stop("Invalid initial state");
     odeintr::state_type inival;
-    for (int i = 0; i != odeintr::N; ++i) inival[i] = init[i];
+    std::copy(init.begin(), init.end(), inival.begin());
     odeint::integrate(odeintr::sys, inival, start, start + duration, step_size);
     return std::vector<double>(inival.begin(), inival.end());
   }
   
-  __FOOTERS__;'
+  __FOOTERS__;
+  '
 }
 
 substitute_opt_level = function(flags, level, omit.debug)
@@ -402,9 +400,14 @@ process_flags = function(name, level, omit.debug)
 #' indicate optimization level and "-g" to indicate that
 #' the compiler should issue debugging symbols.
 #' 
+#' Please let me know if this function fails for your
+#' compiler. (Submit and issue on GitHub.)
+#' 
 #' @note Don't go overboard. Levels greater than 3 can be
 #' hazardous to numerical accuracy. Some packages will not
 #' compile or will give inaccurate results for levels above 2.
+#' 
+#' A very similar function exists in the RStan package.
 #' 
 #' @author Timothy H. Keitt
 #' 
