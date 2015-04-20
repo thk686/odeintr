@@ -26,11 +26,16 @@ unless you remove or edit the "Makevars" file.
 This function assumes that your compiler uses "-O" to
 indicate optimization level and "-g" to indicate that
 the compiler should issue debugging symbols.
+
+Please let me know if this function fails for your
+compiler. (Submit and issue on GitHub.)
 }
 \note{
 Don't go overboard. Levels greater than 3 can be
 hazardous to numerical accuracy. Some packages will not
 compile or will give inaccurate results for levels above 2.
+
+A very similar function exists in the RStan package.
 }
 \author{
 Timothy H. Keitt

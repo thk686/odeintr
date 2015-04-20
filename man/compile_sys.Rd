@@ -107,7 +107,7 @@ verify whether that works. You might also try \code{\link{set_optimization}}.
 \dontrun{
 # Logistic growth
 compile_sys("logistic", "dxdt = x * (1 - x)")
-plot(logistic(0.001, 15), type = "l", lwd = 2)
+plot(logistic(0.001, 15), type = "l", lwd = 2, col = "steelblue")
 Sys.sleep(0.5)
 
 # Lotka-Volterra predator-prey equations
@@ -118,7 +118,7 @@ LV.sys = '
 compile_sys("preypred", LV.sys)
 system.time(preypred_no_record(rep(1, 2), 1e6))
 x = preypred(rep(1, 2), 100)
-plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator")
+plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator", col = "steelblue")
 Sys.sleep(0.5)
 
 # Lorenz model from odeint examples
@@ -135,7 +135,7 @@ Lorenz.sys = '
 compile_sys("lorenz", Lorenz.sys, Lorenz.globals)
 system.time(lorenz_no_record(rep(1, 3), 1e5))
 x = lorenz(rep(1, 3), 100)
-plot(x[, c(2, 4)], type = 'l')
+plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 }
 }
 \author{

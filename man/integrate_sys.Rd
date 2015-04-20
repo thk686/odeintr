@@ -50,7 +50,7 @@ null_rec = function(x, t) NULL
 system.time(integrate_sys(LV.sys, rep(1, 2), 1e3, observer = null_rec))
 named_rec = function(x, t) c(Prey = x[1], Predator = x[2])
 x = integrate_sys(LV.sys, rep(1, 2), 100, observer = named_rec)
-plot(x[, 2:3], type = "l")
+plot(x[, 2:3], type = "l", lwd = 3, col = "steelblue")
 Sys.sleep(0.5)
 
 # Lorenz model from odeint examples
@@ -62,7 +62,7 @@ Lorenz.sys = function(x, t)
 }
 system.time(integrate_sys(Lorenz.sys, rep(1, 3), 1e2, obs = null_rec))
 x = integrate_sys(Lorenz.sys, rep(1, 3), 100)
-plot(x[, c(2, 4)], type = 'l')
+plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 }
 }
 \author{
