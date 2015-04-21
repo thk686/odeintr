@@ -364,10 +364,21 @@ array_sys_template = function()
   '
 }
 
+disable_asserts = function(makevars)
+{
+  con = pipe(paste("R CMD config CPPFLAGS"))
+  flags = readLines(con); close(con)
+  if (!is.finite(pmatch("-DNDEBUG", flags)))
+    flags = paste(flags, "-DNDEBUG")
+  flags = gsub("^\\s+|\\s+$", "", flags, perl = TRUE)
+  cat(paste0("CPPFLAGS=", flags, "\n"),
+      file = makevars, append = TRUE)
+}
+
 substitute_opt_level = function(flags, level, omit.debug)
 {
   flags = gsub("-O\\d+", paste0("-O", level), flags, perl = TRUE)
-  if (omit.debug) flags = gsub("\\w*-g\\w*", "", flags, perl = TRUE)
+  if (omit.debug) flags = gsub("\\s*-g\\s*", "", flags, perl = TRUE)
   flags = gsub("^\\s+|\\s+$", "", flags, perl = TRUE)
   return(flags)
 }
@@ -387,7 +398,8 @@ process_flags = function(name, level, omit.debug)
 #' Write a user Makevars with updated optimization level
 #' 
 #' @param level the compiler optimization level (-O<level>)
-#' @param omit.debug if ture, remove "-g" from flags
+#' @param omit.debug if true, remove "-g" from flags
+#' @param disable.asserts if true, set NDEBUG define
 #' @param overwrite if true, overwrite existing Makevars file
 #' 
 #' @details This function will change the optimization flags used
@@ -413,8 +425,12 @@ process_flags = function(name, level, omit.debug)
 #' 
 #' @seealso \code{\link{compile_sys}}
 #' 
+#' @rdname set-opt
 #' @export
-set_optimization = function(level = 3, omit.debug = FALSE, overwrite = FALSE)
+set_optimization = function(level = 3,
+                            omit.debug = FALSE,
+                            disable.asserts = FALSE,
+                            overwrite = FALSE)
 {
   user_dir = file.path(Sys.getenv("HOME"), ".R")
   if (!file.exists(user_dir)) dir.create(user_dir)
@@ -427,5 +443,32 @@ set_optimization = function(level = 3, omit.debug = FALSE, overwrite = FALSE)
       cat(process_flags(x, level, omit.debug), "\n",
           file = makevars, append = TRUE)
     })
+  if (disable.asserts) disable_asserts(makevars)
   invisible(.opt.env.vars)
+}
+
+#' @rdname set-opt
+#' @export
+show.Makevars = function()
+{
+  user_dir = file.path(Sys.getenv("HOME"), ".R")
+  makevars = file.path(user_dir, "Makevars")
+  mv = readLines(makevars)
+  if (file.exists(makevars))
+    for (l in mv) cat(l, "\n")
+  return(invisible(mv))
+}
+
+#' @rdname set-opt
+#' @export
+rm.Makevars = function()
+{
+  user_dir = file.path(Sys.getenv("HOME"), ".R")
+  makevars = file.path(user_dir, "Makevars")
+  if (file.exists(makevars))
+  {
+    mv = readLines(makevars)
+    unlink(makevars)
+  }
+  return(invisible(mv))
 }
