@@ -63,18 +63,6 @@ plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 One of the main reasons the compiled code has the potential to be very fast is that ODEINT is a header-only library, so the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
 optimization level.)
 
-Here are some timings on a relatively fast test system:
-
-```r
-# run without observer, returns end state
-system.time(lorenz_no_record(rep(1, 3), 1e6))
-```
-
-```
-##    user  system elapsed 
-##   9.330   0.009   9.360
-```
-
 ### To Do
 
 1. Add additional integration methods from odeint
