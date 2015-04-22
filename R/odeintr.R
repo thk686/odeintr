@@ -318,6 +318,23 @@ array_sys_template = function()
   }; // namespace odeintr
   
   // [[Rcpp::export]]
+  Rcpp::List get_output()
+  {
+    Rcpp::List out;
+    out("t") = Rcpp::wrap(odeintr::rec_t);
+    for (int i = 0; i != odeintr::N; ++i)
+    {
+      auto cnam = std::string("x") + std::to_string(i + 1);
+      out(cnam) = Rcpp::wrap(odeintr::rec_x[i]);
+    }
+    out.attr("class") = "data.frame";
+    int rows_out = odeintr::rec_t.size();
+    auto rn = Rcpp::IntegerVector::create(NA_INTEGER, -rows_out);
+    out.attr("row.names") = rn;
+    return out;
+  };
+  
+  // [[Rcpp::export]]
   Rcpp::List __FUNCNAME__(Rcpp::NumericVector init,
                           double duration,
                           double step_size = 1.0,
@@ -332,18 +349,7 @@ array_sys_template = function()
     odeint::integrate(odeintr::sys, inival,
                       start, start + duration, step_size,
                       odeintr::obs);
-    Rcpp::List out;
-    out("t") = Rcpp::wrap(odeintr::rec_t);
-    for (int i = 0; i != odeintr::N; ++i)
-    {
-      auto cnam = std::string("x") + std::to_string(i + 1);
-      out(cnam) = Rcpp::wrap(odeintr::rec_x[i]);
-    }
-    out.attr("class") = "data.frame";
-    int rows_out = odeintr::rec_t.size();
-    auto rn = Rcpp::IntegerVector::create(NA_INTEGER, -rows_out);
-    out.attr("row.names") = rn;
-    return out;
+    return get_output();
   }
 
   // [[Rcpp::export]]
@@ -472,3 +478,4 @@ rm.Makevars = function()
   }
   return(invisible(mv))
 }
+
