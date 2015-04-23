@@ -4,21 +4,22 @@
 \alias{compile_sys}
 \title{Compile ODE system}
 \usage{
-compile_sys(name, sys, globals = "", headers = "", footers = "",
-  sys_dim = -1L, compile = TRUE, ...)
+compile_sys(name, sys, method = "rk5_i", sys_dim = -1L, atol = 1e-06,
+  rtol = 1e-06, globals = "", headers = "", footers = "",
+  compile = TRUE, ...)
 }
 \arguments{
 \item{name}{the name of the generated integration function}
 
 \item{sys}{a string containing C++ expressions}
 
+\item{sys_dim}{length of the state vector}
+
 \item{globals}{a string with global C++ declarations}
 
 \item{headers}{code to appear before the \code{odeintr} namespace}
 
 \item{footers}{code to appear after the \code{odeintr} namespace}
-
-\item{sys_dim}{length of the state vector}
 
 \item{compile}{if false, just return the code}
 
