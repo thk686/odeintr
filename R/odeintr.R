@@ -39,7 +39,7 @@ NULL
 #' 
 #' Numerically integrates an ODE system defined in R
 #' 
-#' @param dxdt a function with signature function(x, t)
+#' @param sys a function with signature function(x, t)
 #' @param init the initial conditions
 #' @param duration time-span of the integration
 #' @param step_size the initial step size (adjusted internally)
@@ -261,7 +261,7 @@ integrate_sys = function(sys, init, duration,
 #' ' # Lorenz.sys
 #' compile_sys("lorenz", Lorenz.sys, globals = Lorenz.globals)
 #' system.time(lorenz_no_record(rep(1, 3), 1e5))
-#' x = lorenz(rep(1, 3), 100, 0.01)
+#' x = lorenz(rep(1, 3), 100, 0.001)
 #' plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 #' }
 #' @export
