@@ -58,11 +58,13 @@ Rcpp::List __FUNCNAME___get_output()
 };
 
 // [[Rcpp::export]]
-void __FUNCNAME___set_state(Rcpp::NumericVector s)
+void __FUNCNAME___set_state(Rcpp::NumericVector new_state)
 {
-  if (s.size() != odeintr::N)
+  if (new_state.size() != odeintr::N)
     Rcpp::stop("Invalid initial state");
-  std::copy(s.begin(), s.end(), odeintr::state.begin());
+  std::copy(new_state.begin(),
+            new_state.end(),
+            odeintr::state.begin());
 }
 
 // [[Rcpp::export]]
@@ -80,10 +82,10 @@ void __FUNCNAME___reset_observer()
 }
 
 // [[Rcpp::export]]
-Rcpp::List __FUNCNAME__adap(Rcpp::NumericVector init,
-                            double duration,
-                            double step_size = 1.0,
-                            double start = 0.0)
+Rcpp::List __FUNCNAME___adap(Rcpp::NumericVector init,
+                             double duration,
+                             double step_size = 1.0,
+                             double start = 0.0)
 {
   __FUNCNAME___set_state(init);
   __FUNCNAME___reset_observer();
