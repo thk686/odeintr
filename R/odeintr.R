@@ -44,6 +44,7 @@ NULL
 #' @param duration time-span of the integration
 #' @param step_size the initial step size (adjusted internally)
 #' @param start the starting time
+#' @param adaptive_obs if true, call observer after each adaptive step
 #' @param observer a function with signature function(x, t) returning values to store in output
 #' 
 #' @details The system will be integrated from \code{start} to \code{start + duration}. The method
@@ -74,7 +75,7 @@ NULL
 #' null_rec = function(x, t) NULL
 #' system.time(integrate_sys(LV.sys, rep(1, 2), 1e3, observer = null_rec))
 #' named_rec = function(x, t) c(Prey = x[1], Predator = x[2])
-#' x = integrate_sys(LV.sys, rep(1, 2), 100, observer = named_rec)
+#' x = integrate_sys(LV.sys, rep(1, 2), 100, 0.01, observer = named_rec)
 #' plot(x[, 2:3], type = "l", lwd = 3, col = "steelblue")
 #' Sys.sleep(0.5)
 #' 
@@ -86,15 +87,19 @@ NULL
 #'    -8/3 * x[3] + x[1] * x[2])
 #' }
 #' system.time(integrate_sys(Lorenz.sys, rep(1, 3), 1e2, obs = null_rec))
-#' x = integrate_sys(Lorenz.sys, rep(1, 3), 100)
+#' x = integrate_sys(Lorenz.sys, rep(1, 3), 100, 0.01)
 #' plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 #' }
 #' @export
 integrate_sys = function(sys, init, duration,
                          step_size = 1, start = 0,
+                         adaptive_obs = FALSE,
                          observer = function(x, t) x)
 {
-  res = integrate_sys_(sys, observer, init, duration, step_size, start)
+  res = if (adaptive_obs)
+    integrate_sys_adapt(sys, observer, init, duration, step_size, start)
+  else
+    integrate_sys_const(sys, observer, init, duration, step_size, start)
   if (length(res[[1]]) == 0) return(NULL)
   x = res[[2]]; out = list()
   if (any(diff(sapply(x, length)) != 0)) return(res)
@@ -149,7 +154,7 @@ integrate_sys = function(sys, init, duration,
 #' can set global named parameter values here. Note that
 #' these will be defined within the \code{odeintr} namespace.
 #' 
-#' You can insert arbitrary code compiled outside the \code{odeintr}
+#' You can insert arbitrary code outside the \code{odeintr}
 #' names space using \code{headers} and \code{footers}. This code
 #' can be anything compatible with Rcpp. You could for example
 #' define exported Rcpp functions that set simulation paramters.
@@ -159,21 +164,21 @@ integrate_sys = function(sys, init, duration,
 #' 
 #' The following methods can be used:
 #' 
-#' \tabular{ll}{
-#' Code \tab Stepper \cr
-#' \code{euler} \tab interpolating \code{euler} \cr
-#' \code{rk4} \tab \code{runge_kutta4} \cr
-#' \code{rk54} \tab \code{runge_kutta_cash_karp54} \cr
-#' \code{rk54_a} \tab adaptive \code{runge_kutta_cash_karp54} \cr
-#' \code{rk5} \tab \code{runge_kutta_dopri5} \cr
-#' \code{rk5_a} \tab adaptive \code{runge_kutta_dopri5} \cr
-#' \code{rk5_i} \tab interpolating adaptive \code{runge_kutta_dopri5} \cr
-#' \code{rk78} \tab \code{runge_kutta_fehlberg78<state_type>} \cr
-#' \code{rk78_a} \tab adaptive \code{runge_kutta_fehlberg78} \cr
-#' \code{abN} \tab order N \code{adams_bashforth} \cr
-#' \code{abmN} \tab order N \code{adams_bashforth_moulton} \cr
-#' \code{bs} \tab adaptive \code{bulirsch_stoer} \cr
-#' \code{bsd} \tab interpolating adaptive \code{bulirsch_stoer_dense_out}}
+#' \tabular{lll}{
+#' Code \tab Stepper \tab Type \cr
+#' \code{euler} \tab \code{euler} \tab Interpolating \cr
+#' \code{rk4} \tab \code{runge_kutta4} \tab Regular \cr
+#' \code{rk54} \tab \code{runge_kutta_cash_karp54} \tab Regular \cr
+#' \code{rk54_a} \tab \code{runge_kutta_cash_karp54} \tab Adaptive \cr
+#' \code{rk5} \tab \code{runge_kutta_dopri5} \tab Regular \cr
+#' \code{rk5_a} \tab \code{runge_kutta_dopri5} \tab Adaptive \cr
+#' \code{rk5_i} \tab \code{runge_kutta_dopri5} \tab Interpolating adaptive \cr
+#' \code{rk78} \tab \code{runge_kutta_fehlberg78} \tab Regular \cr
+#' \code{rk78_a} \tab \code{runge_kutta_fehlberg78} \tab Adaptive \cr
+#' \code{abN} \tab \code{adams_bashforth} \tab Order N multistep \cr
+#' \code{abmN} \tab \code{adams_bashforth_moulton} \tab Order N multistep \cr
+#' \code{bs} \tab \code{bulirsch_stoer} \tab Adaptive \cr
+#' \code{bsd} \tab \code{bulirsch_stoer_dense_out} \tab Interpolating adaptive}
 #' 
 #' These steppers are described at \href{http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview}{here}.
 #' 
@@ -197,14 +202,14 @@ integrate_sys = function(sys, init, duration,
 #'    specified observer calls \tab
 #'    \code{init, times, step_size = 1.0} \tab
 #'    data frame \cr
+#'  \code{name_continue_at} \tab
+#'    specified observer calls starting from previous final state \tab
+#'    \code{times, step_size = 1.0} \tab
+#'    data frame \cr
 #'  \code{name_no_record} \tab
 #'    no observer calls \tab
 #'    \code{init, duration, step_size = 1.0, start = 0.0} \tab
 #'    vector (final state)\cr
-#'  \code{name_continue} \tab
-#'    adaptive observer calls starting from previous final state \tab
-#'    \code{init, duration, step_size = 1.0} \tab
-#'    data frame \cr
 #'  \code{name_reset_observer} \tab
 #'    clear observed record \tab void \tab void \cr
 #'  \code{name_get_state} \tab
@@ -219,8 +224,8 @@ integrate_sys = function(sys, init, duration,
 #' \tabular{ll}{
 #' \code{init} \tab vector of initial conditions \cr
 #' \code{duration} \tab end at start + duration \cr
-#' \code{step_size} \tab the integration step size; variable for adaptive and interpolating methods \cr
-#' \code{start} \tab the starting time \cr
+#' \code{step_size} \tab the integration step size; variable for adaptive methods \cr
+#' \code{start} \tab the starting time (always equal 0.0 for \code{name_at}) \cr
 #' \code{time} \tab vector of times as which to call the observer \cr
 #' \code{new_state} \tab vector of state values \cr}
 #' 
