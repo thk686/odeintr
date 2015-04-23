@@ -267,6 +267,78 @@ compile_sys = function(name, sys,
   }
 }
 
+make_stepper_constr = function(controlled, dense, atol, rtol)
+{
+  stepper_constr = "stepper_type()"
+  if (controlled)
+    stepper_constr = paste0("odeint::make_controlled(", atol, ", ", rtol, ", stepper_type())")
+  if (dense)
+    stepper_constr = paste0("odeint::make_dense_output(", atol, ", ", rtol, ", stepper_type())") 
+  return(stepper_constr)
+}
+
+make_stepper_type = function(stepper)
+{
+  if (grepl("ab|am|abm", stepper))
+  {
+    steps = as.integer(sub("ab|am|abm([0-9]+)", "\\1", stepper))
+    stepper = sub("(ab|am|abm)[0-9]+", "\\1", stepper)
+  }
+  switch(stepper,
+         euler = "euler<state_type>",
+         rk4 = "runge_kutta4<state_type>",
+         rk54 = "runge_kutta_cash_karp54<state_type>",
+         rk5 = "runge_kutta_dopri5<state_type>",
+         rk78 = "runge_kutta_fehlberg78<state_type>",
+         ab = paste0("adams_bashforth<", steps, ", state_type>"),
+         am = paste0("adams_moulton<", steps, ", state_type>"),
+         abm = paste0("adams_bashforth_moulton<", steps, ", state_type>"),
+         bs = "bulirsch_stoer<state_type>",
+         bsd = "bulirsch_stoer_dense_out<state_type>",
+         paste0(stepper, "<state_type>"))
+}
+
+#' @export
+compile_adaptive = function(name, sys,
+                            globals = "", 
+                            headers = "",
+                            footers = "",
+                            sys_dim = -1L,
+                            compile = TRUE,
+                            stepper = "rk5",
+                            controlled = FALSE,
+                            dense = TRUE,
+                            atol = 1e-6,
+                            rtol = 1e-6,
+                            ...)
+{
+  stepper = make_stepper_type(stepper)
+  if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
+  if (is.na(sys_dim))
+  {
+    sys = gsub("\\Wdxdt|dxdt\\W", "dxdt[0]", sys, perl = TRUE)
+    sys = gsub("\\Wx|x\\W", "x[0]", sys, perl = TRUE)
+    sys_dim = 1L
+  }
+  fn = system.file(file.path("templates", "rcpp_template.cpp"),
+                   package = "odeintr", mustWork = TRUE)
+  con = file(fn); code = readLines(con); close(con)
+  code = gsub("__FUNCNAME__", name, code)
+  code = gsub("__STEPPER_TYPE__", stepper, code)
+  stepper_constr = make_stepper_constr(controlled, dense, atol, rtol)
+  code = gsub("__STEPPER_CONSTRUCT__", stepper_constr, code)
+  code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
+  code = sub("__GLOBALS__", globals, code)
+  code = sub("__SYS__", sys, code)
+  code = sub("__HEADERS__", headers, code)
+  code = sub("__FOOTERS__", footers, code)
+  code = paste0(code, collapse = "\n")
+  if (compile)
+    tryCatch(Rcpp::sourceCpp(code = code, ...),
+        error = function(e) e)
+  return(invisible(code))
+}
+
 get_sys_dim = function(x)
 {
   matches = gregexpr("dxdt\\[\\d\\]", x, perl = TRUE)
