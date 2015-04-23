@@ -5,9 +5,11 @@
 \title{Integrate an ODE system using ODEINT}
 \usage{
 integrate_sys(sys, init, duration, step_size = 1, start = 0,
-  observer = function(x, t) x)
+  adaptive_obs = FALSE, observer = function(x, t) x)
 }
 \arguments{
+\item{sys}{a function with signature function(x, t)}
+
 \item{init}{the initial conditions}
 
 \item{duration}{time-span of the integration}
@@ -16,9 +18,9 @@ integrate_sys(sys, init, duration, step_size = 1, start = 0,
 
 \item{start}{the starting time}
 
-\item{observer}{a function with signature function(x, t) returning values to store in output}
+\item{adaptive_obs}{if true, call observer after each adaptive step}
 
-\item{dxdt}{a function with signature function(x, t)}
+\item{observer}{a function with signature function(x, t) returning values to store in output}
 }
 \value{
 A data frame, \code{NULL} if no samples were recorded and a very complicated
@@ -49,7 +51,7 @@ LV.sys = function(x, t)
 null_rec = function(x, t) NULL
 system.time(integrate_sys(LV.sys, rep(1, 2), 1e3, observer = null_rec))
 named_rec = function(x, t) c(Prey = x[1], Predator = x[2])
-x = integrate_sys(LV.sys, rep(1, 2), 100, observer = named_rec)
+x = integrate_sys(LV.sys, rep(1, 2), 100, 0.01, observer = named_rec)
 plot(x[, 2:3], type = "l", lwd = 3, col = "steelblue")
 Sys.sleep(0.5)
 
@@ -61,7 +63,7 @@ Lorenz.sys = function(x, t)
    -8/3 * x[3] + x[1] * x[2])
 }
 system.time(integrate_sys(Lorenz.sys, rep(1, 3), 1e2, obs = null_rec))
-x = integrate_sys(Lorenz.sys, rep(1, 3), 100)
+x = integrate_sys(Lorenz.sys, rep(1, 3), 100, 0.01)
 plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 }
 }
