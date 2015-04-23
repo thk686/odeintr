@@ -235,13 +235,18 @@ integrate_sys = function(sys, init, duration,
 #' }
 #' @export
 compile_sys = function(name, sys,
+                       method = "rk5_i",
+                       sys_dim = -1L,
+                       atol = 1e-6,
+                       rtol = 1e-6,
                        globals = "", 
                        headers = "",
                        footers = "",
-                       sys_dim = -1L,
                        compile = TRUE,
                        ...)
 {
+  stepper_constr = make_stepper_constr(method, atol, rtol)
+  stepper = make_stepper_type(method)
   if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
   if (is.na(sys_dim))
   {
@@ -249,30 +254,30 @@ compile_sys = function(name, sys,
     sys = gsub("\\Wx|x\\W", "x[0]", sys, perl = TRUE)
     sys_dim = 1L
   }
-  code = array_sys_template()
+  fn = system.file(file.path("templates", "rcpp_template.cpp"),
+                   package = "odeintr", mustWork = TRUE)
+  con = file(fn); code = readLines(con); close(con)
   code = gsub("__FUNCNAME__", name, code)
+  code = gsub("__STEPPER_TYPE__", stepper, code)
+  code = gsub("__STEPPER_CONSTRUCT__", stepper_constr, code)
   code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
   code = sub("__GLOBALS__", globals, code)
   code = sub("__SYS__", sys, code)
   code = sub("__HEADERS__", headers, code)
   code = sub("__FOOTERS__", footers, code)
+  code = paste0(code, collapse = "\n")
   if (compile)
-  {
-    Rcpp::sourceCpp(code = code, ...)
-    return(invisible(code))
-  }
-  else
-  {
-    return(code)
-  }
+    tryCatch(Rcpp::sourceCpp(code = code, ...),
+             error = function(e) e)
+  return(invisible(code))
 }
 
-make_stepper_constr = function(controlled, dense, atol, rtol)
+make_stepper_constr = function(method, atol, rtol)
 {
   stepper_constr = "stepper_type()"
-  if (controlled)
+  if (grepl("_a$", method))
     stepper_constr = paste0("odeint::make_controlled(", atol, ", ", rtol, ", stepper_type())")
-  if (dense)
+  if (grepl("_i$", method))
     stepper_constr = paste0("odeint::make_dense_output(", atol, ", ", rtol, ", stepper_type())") 
   return(stepper_constr)
 }
@@ -296,47 +301,6 @@ make_stepper_type = function(stepper)
          bs = "bulirsch_stoer<state_type>",
          bsd = "bulirsch_stoer_dense_out<state_type>",
          paste0(stepper, "<state_type>"))
-}
-
-#' @export
-compile_adaptive = function(name, sys,
-                            globals = "", 
-                            headers = "",
-                            footers = "",
-                            sys_dim = -1L,
-                            compile = TRUE,
-                            stepper = "rk5",
-                            controlled = FALSE,
-                            dense = TRUE,
-                            atol = 1e-6,
-                            rtol = 1e-6,
-                            ...)
-{
-  stepper = make_stepper_type(stepper)
-  if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
-  if (is.na(sys_dim))
-  {
-    sys = gsub("\\Wdxdt|dxdt\\W", "dxdt[0]", sys, perl = TRUE)
-    sys = gsub("\\Wx|x\\W", "x[0]", sys, perl = TRUE)
-    sys_dim = 1L
-  }
-  fn = system.file(file.path("templates", "rcpp_template.cpp"),
-                   package = "odeintr", mustWork = TRUE)
-  con = file(fn); code = readLines(con); close(con)
-  code = gsub("__FUNCNAME__", name, code)
-  code = gsub("__STEPPER_TYPE__", stepper, code)
-  stepper_constr = make_stepper_constr(controlled, dense, atol, rtol)
-  code = gsub("__STEPPER_CONSTRUCT__", stepper_constr, code)
-  code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
-  code = sub("__GLOBALS__", globals, code)
-  code = sub("__SYS__", sys, code)
-  code = sub("__HEADERS__", headers, code)
-  code = sub("__FOOTERS__", footers, code)
-  code = paste0(code, collapse = "\n")
-  if (compile)
-    tryCatch(Rcpp::sourceCpp(code = code, ...),
-        error = function(e) e)
-  return(invisible(code))
 }
 
 get_sys_dim = function(x)
