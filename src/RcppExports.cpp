@@ -6,9 +6,9 @@
 
 using namespace Rcpp;
 
-// integrate_sys_
-List integrate_sys_(Function derivs, Function recfun, state_type init, double duration, double step_size, double start);
-RcppExport SEXP odeintr_integrate_sys_(SEXP derivsSEXP, SEXP recfunSEXP, SEXP initSEXP, SEXP durationSEXP, SEXP step_sizeSEXP, SEXP startSEXP) {
+// integrate_sys_const
+List integrate_sys_const(Function derivs, Function recfun, state_type init, double duration, double step_size, double start);
+RcppExport SEXP odeintr_integrate_sys_const(SEXP derivsSEXP, SEXP recfunSEXP, SEXP initSEXP, SEXP durationSEXP, SEXP step_sizeSEXP, SEXP startSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -18,7 +18,23 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type duration(durationSEXP);
     Rcpp::traits::input_parameter< double >::type step_size(step_sizeSEXP);
     Rcpp::traits::input_parameter< double >::type start(startSEXP);
-    __result = Rcpp::wrap(integrate_sys_(derivs, recfun, init, duration, step_size, start));
+    __result = Rcpp::wrap(integrate_sys_const(derivs, recfun, init, duration, step_size, start));
+    return __result;
+END_RCPP
+}
+// integrate_sys_adapt
+List integrate_sys_adapt(Function derivs, Function recfun, state_type init, double duration, double step_size, double start);
+RcppExport SEXP odeintr_integrate_sys_adapt(SEXP derivsSEXP, SEXP recfunSEXP, SEXP initSEXP, SEXP durationSEXP, SEXP step_sizeSEXP, SEXP startSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< Function >::type derivs(derivsSEXP);
+    Rcpp::traits::input_parameter< Function >::type recfun(recfunSEXP);
+    Rcpp::traits::input_parameter< state_type >::type init(initSEXP);
+    Rcpp::traits::input_parameter< double >::type duration(durationSEXP);
+    Rcpp::traits::input_parameter< double >::type step_size(step_sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type start(startSEXP);
+    __result = Rcpp::wrap(integrate_sys_adapt(derivs, recfun, init, duration, step_size, start));
     return __result;
 END_RCPP
 }
