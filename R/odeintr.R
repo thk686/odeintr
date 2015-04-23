@@ -115,10 +115,13 @@ integrate_sys = function(sys, init, duration,
 #' 
 #' @param name the name of the generated integration function
 #' @param sys a string containing C++ expressions
+#' @param method a method string (see Details)
+#' @param sys_dim length of the state vector
+#' @param atol absolute tolerance if using adaptive step size
+#' @param rtol relative tolerance if using adaptive step size
 #' @param globals a string with global C++ declarations
 #' @param headers code to appear before the \code{odeintr} namespace
 #' @param footers code to appear after the \code{odeintr} namespace
-#' @param sys_dim length of the state vector
 #' @param compile if false, just return the code
 #' @param ... passed to \code{\link{sourceCpp}}
 #' 
@@ -131,30 +134,6 @@ integrate_sys = function(sys, init, duration,
 #' likely crash your R session. It is safer to specify
 #' \code{sys_dim} directly.
 #' 
-#' The signature of \code{name} is:
-#' 
-#' \code{name(initial_state, duration, step_size, start)}
-#' 
-#' where \code{duration} is the integration time, \code{step_size}
-#' is the time step (default = 1.0) and \code{start} is the
-#' starting time (default = 0.0). The
-#' return value from this function is a data frame with time
-#' in the first column and state in the remaining columns.
-#' 
-#' A second function, \code{name_no_record}, is also generated.
-#' This function does not take an observer and will return the
-#' approximate solution at the end of the integration. Use this
-#' for benchmarking or discarding transients (result can be used
-#' as the initial condition for a subsequent call).
-#' 
-#' The integration method is a 5th order Dormand-Prince algorithm
-#' with error tolerance (absolute and relative) of 1e-6. The
-#' step size is adaptive. The given step size is tried and a
-#' smaller or larger step size will be used depending on the
-#' esimtated integration error. The time and system state are
-#' recorded after every step. The time increments will generally
-#' be variable.
-#' 
 #' The C++ expressions must index a state array of length
 #' \code{sys_dim}. The state array is \code{x} and the
 #' derivatives are \code{dxdt}. The first state value is
@@ -162,10 +141,8 @@ integrate_sys = function(sys, init, duration,
 #' 
 #' In the case you use bare \code{dxdt} and \code{x}, an
 #' attempt will be made to append \code{[0]} to these
-#' variables. This can fail, so do not rely on it. It
-#' requires that \code{dxdt} and \code{x} are adjacent
-#' to a "non-word" character as defined by perl regular
-#' expressions. This will also fail if you set \code{sys_dim}
+#' variables. This can fail, so do not rely on it. 
+#' This will also fail if you set \code{sys_dim}
 #' to a positive value.
 #' 
 #' The \code{globals} string can be arbitrary C++ code. You
@@ -180,20 +157,72 @@ integrate_sys = function(sys, init, duration,
 #' includes. \code{footers} is inserted at the end of the
 #' code.
 #' 
-#' @note The c++11 plugin is enabled.
+#' The following methods can be used:
 #' 
-#' Also, despite using an array as the state,
-#' even when it is length one, there is no performance penalty as the length
-#' of the state vector is known at compile time. Your compiler will optimize
-#' out any pointer dereferencing. You may get a large increase in performance
-#' by enabling function inlining and loop unrolling. For GCC, that is "-O3". Chances
-#' are that your R distribution uses "-O2". You can override this by copying each
-#' line containing "-O2" from your R distribution's Makeconf to .R/Makevars in
-#' your home directory replacing each instance of "-O2" with "-O3". You might
-#' be able to do this with environment variables. I have not been able to
-#' verify whether that works. You might also try \code{\link{set_optimization}}.
+#' \tabular{ll}{
+#' Code \tab Stepper \cr
+#' \code{euler} \tab interpolating \code{euler} \cr
+#' \code{rk4} \tab \code{runge_kutta4} \cr
+#' \code{rk54} \tab \code{runge_kutta_cash_karp54} \cr
+#' \code{rk54_a} \tab adaptive \code{runge_kutta_cash_karp54} \cr
+#' \code{rk5} \tab \code{runge_kutta_dopri5} \cr
+#' \code{rk5_a} \tab adaptive \code{runge_kutta_dopri5} \cr
+#' \code{rk5_i} \tab interpolating adaptive \code{runge_kutta_dopri5} \cr
+#' \code{rk78} \tab \code{runge_kutta_fehlberg78<state_type>} \cr
+#' \code{rk78_a} \tab adaptive \code{runge_kutta_fehlberg78} \cr
+#' \code{abN} \tab order N \code{adams_bashforth} \cr
+#' \code{abmN} \tab order N \code{adams_bashforth_moulton} \cr
+#' \code{bs} \tab adaptive \code{bulirsch_stoer} \cr
+#' \code{bsd} \tab interpolating adaptive \code{bulirsch_stoer_dense_out}}
+#' 
+#' These steppers are described at \href{http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview}{here}.
+#' 
+#' @note The c++11 plugin is enabled.
 #'  
-#' @return the C++ code invisibly
+#' @return The C++ code invisibly.
+#' 
+#' The following functions are generated:
+#' 
+#' \tabular{llll}{
+#'  Function \tab Use \tab Arguments \tab Return \cr
+#'  \code{name} \tab
+#'    regular observer calls \tab
+#'    \code{init, duration, step_size = 1.0, start = 0.0} \tab
+#'    data frame\cr
+#'  \code{name_adap} \tab
+#'    adaptive observer calls \tab
+#'    \code{init, duration, step_size = 1.0, start = 0.0} \tab
+#'    data frame \cr
+#'  \code{name_at} \tab
+#'    specified observer calls \tab
+#'    \code{init, times, step_size = 1.0} \tab
+#'    data frame \cr
+#'  \code{name_no_record} \tab
+#'    no observer calls \tab
+#'    \code{init, duration, step_size = 1.0, start = 0.0} \tab
+#'    vector (final state)\cr
+#'  \code{name_continue} \tab
+#'    adaptive observer calls starting from previous final state \tab
+#'    \code{init, duration, step_size = 1.0} \tab
+#'    data frame \cr
+#'  \code{name_reset_observer} \tab
+#'    clear observed record \tab void \tab void \cr
+#'  \code{name_get_state} \tab
+#'    get current state \tab void \tab vector \cr
+#'  \code{name_set_state} \tab
+#'    set current state \tab \code{new_state} \tab void \cr
+#'  \code{name_get_output} \tab
+#'    fetch observed record \tab void \tab data frame}
+#'    
+#' Arguments are:
+#' 
+#' \tabular{ll}{
+#' \code{init} \tab vector of initial conditions \cr
+#' \code{duration} \tab end at start + duration \cr
+#' \code{step_size} \tab the integration step size; variable for adaptive and interpolating methods \cr
+#' \code{start} \tab the starting time \cr
+#' \code{time} \tab vector of times as which to call the observer \cr
+#' \code{new_state} \tab vector of state values \cr}
 #' 
 #' @author Timothy H. Keitt
 #' 
@@ -203,7 +232,7 @@ integrate_sys = function(sys, init, duration,
 #' \dontrun{
 #' # Logistic growth
 #' compile_sys("logistic", "dxdt = x * (1 - x)")
-#' plot(logistic(0.001, 15), type = "l", lwd = 2, col = "steelblue")
+#' plot(logistic(0.001, 15, 0.1), type = "l", lwd = 2, col = "steelblue")
 #' Sys.sleep(0.5)
 #' 
 #' # Lotka-Volterra predator-prey equations
@@ -213,8 +242,10 @@ integrate_sys = function(sys, init, duration,
 #' ' # LV.sys
 #' compile_sys("preypred", LV.sys)
 #' system.time(preypred_no_record(rep(1, 2), 1e6))
-#' x = preypred(rep(1, 2), 100)
-#' plot(x[, 2:3], type = "l", xlab = "Prey", ylab = "Predator", col = "steelblue")
+#' x = preypred(rep(1, 2), 100, 0.01)
+#' plot(x[, 2:3], type = "l", lwd = 2,
+#'      xlab = "Prey", ylab = "Predator",
+#'      col = "steelblue")
 #' Sys.sleep(0.5)
 #' 
 #' # Lorenz model from odeint examples
@@ -228,9 +259,9 @@ integrate_sys = function(sys, init, duration,
 #'   dxdt[1] = R_ * x[0] - x[1] - x[0] * x[2];
 #'   dxdt[2] = -b_ * x[2] + x[0] * x[1];
 #' ' # Lorenz.sys
-#' compile_sys("lorenz", Lorenz.sys, Lorenz.globals)
+#' compile_sys("lorenz", Lorenz.sys, globals = Lorenz.globals)
 #' system.time(lorenz_no_record(rep(1, 3), 1e5))
-#' x = lorenz(rep(1, 3), 100)
+#' x = lorenz(rep(1, 3), 100, 0.01)
 #' plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 #' }
 #' @export
@@ -245,13 +276,14 @@ compile_sys = function(name, sys,
                        compile = TRUE,
                        ...)
 {
-  stepper_constr = make_stepper_constr(method, atol, rtol)
+  sys = paste0(sys, collapse = "; ")
   stepper = make_stepper_type(method)
+  stepper_constr = make_stepper_constr(method, atol, rtol)
   if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
   if (is.na(sys_dim))
   {
-    sys = gsub("\\Wdxdt|dxdt\\W", "dxdt[0]", sys, perl = TRUE)
-    sys = gsub("\\Wx|x\\W", "x[0]", sys, perl = TRUE)
+    sys = gsub("x", "x[0]", sys, fixed = TRUE)
+    sys = gsub("dx[0]dt", "dxdt[0]", sys, fixed = TRUE)
     sys_dim = 1L
   }
   fn = system.file(file.path("templates", "rcpp_template.cpp"),
@@ -275,6 +307,8 @@ compile_sys = function(name, sys,
 make_stepper_constr = function(method, atol, rtol)
 {
   stepper_constr = "stepper_type()"
+  if (grepl("euler_|rk4_|rk54_i|rk78_i|bs_|bsd_", method))
+    stop("Invalid integration method")
   if (grepl("_a$", method))
     stepper_constr = paste0("odeint::make_controlled(", atol, ", ", rtol, ", stepper_type())")
   if (grepl("_i$", method))
@@ -284,6 +318,7 @@ make_stepper_constr = function(method, atol, rtol)
 
 make_stepper_type = function(stepper)
 {
+  stepper = sub("_i$|_a$", "", stepper)
   if (grepl("ab|am|abm", stepper))
   {
     steps = as.integer(sub("ab|am|abm([0-9]+)", "\\1", stepper))
