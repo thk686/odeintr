@@ -1,3 +1,5 @@
+# Copyright Timothy H. Keitt 2015
+
 #' Odeintr: Fast and Flexible Integration of Ordinary Differential Equations
 #'
 #' This package is a light-weight wrapper around the Boost ODEINT

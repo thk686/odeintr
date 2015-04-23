@@ -1,3 +1,5 @@
+// Copyright Timothy H. Keitt 2015
+
 #ifndef __ODEINTR_H__
 #define __ODEINTR_H__
 

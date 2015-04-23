@@ -1,3 +1,5 @@
+// Copyright Timothy H. Keitt 2015
+
 #include "../inst/include/odeintr.h"
 
 // Globals required because observer is passed by value

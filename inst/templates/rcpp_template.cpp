@@ -1,4 +1,7 @@
- #include <Rcpp.h>
+// Copyright Timothy H. Keitt 2015
+// See license for odeintr package
+
+#include <Rcpp.h>
 // [[Rcpp::plugins(cpp11)]]
 
 // [[Rcpp::depends(BH)]]
