@@ -21,7 +21,7 @@ namespace odeintr
   
   using vec_type = std::vector<double>;
   static std::array<vec_type, N> rec_x;
-  static std::vector<double> rec_t;
+  static vec_type rec_t;
   
   __GLOBALS__;
   
@@ -39,6 +39,13 @@ namespace odeintr
     rec_t.push_back(t);
   }
 }; // namespace odeintr
+
+static void
+reserve(odeintr::vec_type::size_type n)
+{
+  odeintr::rec_t.reserve(n);
+  for (auto &i : odeintr::rec_x) i.reserve(n);
+}
 
 // [[Rcpp::export]]
 Rcpp::List __FUNCNAME___get_output()
@@ -88,7 +95,7 @@ Rcpp::List __FUNCNAME___adap(Rcpp::NumericVector init,
                              double start = 0.0)
 {
   __FUNCNAME___set_state(init);
-  __FUNCNAME___reset_observer();
+  __FUNCNAME___reset_observer(); reserve(duration / step_size);
   odeint::integrate_adaptive(odeintr::stepper, odeintr::sys, odeintr::state,
                              start, start + duration, step_size,
                              odeintr::obs);
@@ -101,7 +108,22 @@ Rcpp::List __FUNCNAME___at(Rcpp::NumericVector init,
                            double step_size = 1.0)
 {
   __FUNCNAME___set_state(init);
-  __FUNCNAME___reset_observer();
+  __FUNCNAME___reset_observer(); reserve(times.size());
+  odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
+                          0.0, times[0], step_size);
+  odeint::integrate_times(odeintr::stepper, odeintr::sys, odeintr::state,
+                          times.begin(), times.end(), step_size, odeintr::obs);
+  return __FUNCNAME___get_output();
+}
+
+// [[Rcpp::export]]
+Rcpp::List
+__FUNCNAME___continue_at(std::vector<double> times, double step_size = 1.0)
+{
+  double start = odeintr::rec_t.back();
+  __FUNCNAME___reset_observer(); reserve(times.size());
+  odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
+                          start, times[0], step_size);
   odeint::integrate_times(odeintr::stepper, odeintr::sys, odeintr::state,
                           times.begin(), times.end(), step_size, odeintr::obs);
   return __FUNCNAME___get_output();
@@ -114,7 +136,7 @@ Rcpp::List __FUNCNAME__(Rcpp::NumericVector init,
                        double start = 0.0)
 {
   __FUNCNAME___set_state(init);
-  __FUNCNAME___reset_observer();
+  __FUNCNAME___reset_observer(); reserve(duration / step_size);
   odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
                           start, start + duration, step_size,
                           odeintr::obs);
@@ -134,16 +156,8 @@ __FUNCNAME___no_record(Rcpp::NumericVector init,
   return __FUNCNAME___get_state();
 }
 
-// [[Rcpp::export]]
-Rcpp::List
-__FUNCNAME___continue(double duration, double step_size = 1.0)
-{
-  double start = odeintr::rec_t.back();
-  odeint::integrate_adaptive(odeintr::stepper, odeintr::sys, odeintr::state,
-                             start, start + duration, step_size, odeintr::obs);
-  return __FUNCNAME___get_output();
-}
-
 __FOOTERS__;
+
+
 
 
