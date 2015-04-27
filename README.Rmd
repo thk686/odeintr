@@ -67,7 +67,7 @@ title(main = "Van der Pol Oscillator", outer = TRUE)
 Because ODEINT is a header-only library, the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
 optimization level.)
 
-The Lorenz  and Van der Pol examples above shows about 10 million observer calls per second.
+The Lorenz  and Van der Pol examples above show about 10 million observer calls per second.
 
 ### To Do
 
