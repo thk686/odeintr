@@ -26,7 +26,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.134   0.008   0.145
+##   0.125   0.004   0.129
 ```
 
 ```r
@@ -80,7 +80,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.010   0.004   0.014
+##   0.009   0.004   0.014
 ```
 
 ```r
@@ -100,7 +100,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.002   0.000   0.002
+##   0.001   0.000   0.001
 ```
 
 ```r
@@ -122,7 +122,7 @@ title(main = "Van der Pol Oscillator", outer = TRUE)
 Because ODEINT is a header-only library, the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
 optimization level.)
 
-The Lorenz example above shows about 8 million observer calls per second. The Van der Pol around 10 million per second.
+The Lorenz  and Van der Pol examples above shows about 10 million observer calls per second.
 
 ### To Do
 
