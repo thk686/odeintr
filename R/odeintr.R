@@ -528,23 +528,3 @@ Jacobian2 = function(code, sys_dim = -1)
   }
   paste0(unlist(lapply(1:sys_dim, f)), collapse = "\n")
 }
-
-substitute_vars = function(x, direction = c("forward", "backward"))
-{
-  direction = match.arg(direction)
-  switch(direction,
-         forward =
-         {
-           for (v in letters)
-           {
-             if (!grepl("\\w+\\[.*\\]", x)) break
-             vv = sub(".*(\\w+\\[.*\\]).*", "\\1", x)
-             x = gsub(vv, v, x)
-           }
-           return(x)
-         },
-         backward = 
-         {
-           
-         })
-}
