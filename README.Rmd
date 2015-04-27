@@ -18,22 +18,24 @@ the [Boost ODEINT package](http://www.odeint.com). Some features:
 1. Ability to specify a custom observer in R that can return aribtrary data (not yet for compiled code)
 1. Three options for calling the observer: at regular intervals, after each update step or at specified times
 1. Ability to alter system state and restart simulations where you left off
-1. You can easily save and edit the generated C++ code (please respect copyright)
+1. You can easily save and edit the generated C++ code
 
 ### Examples
 
 ```{r, fig.width = 5, fig.height = 5}
 library(odeintr)
 dxdt = function(x, t) x * (1 - x)
-x = integrate_sys(dxdt, 0.001, 15, 0.01)
-plot(x, type = "l", lwd = 3, col = "steelblue")
+system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
+plot(x, type = "l", lwd = 3, col = "steelblue", main = "Logistic Growth")
 compile_sys("logistic", "dxdt = x * (1 - x)")
-plot(logistic(0.001, 15, 0.01), type = "l", lwd = "3", col = "steelblue")
+system.time({x = logistic(0.001, 15, 0.01)})
+plot(x, type = "l", lwd = "3", col = "steelblue", main = "Logistic Growth")
 points(logistic_at(0.001, sort(runif(10, 0, 15)), 0.01), col = "darkred")
 dxdt = function(x, t) c(x[1] - x[1] * x[2], x[1] * x[2] - x[2])
-obs = function(x, t) c(Prey = x[1], Predator = x[2])
+obs = function(x, t) c(Prey = x[1], Predator = x[2], Ratio = x[1] / x[2])
 x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)
-plot(x[, c(2, 3)], type = "l", lwd = 2, col = "steelblue")
+plot(x[, c(2, 3)], type = "l", lwd = 2, col = "steelblue", main = "Lotka-Volterra Phase Plot")
+plot(x[, c(1, 4)], type = "l", lwd = 2, col = "steelblue", main = "Prey-Predator Ratio")
 # C++ code
 Lorenz.sys = '
   dxdt[0] = 10.0 * (x[1] - x[0]);
@@ -41,14 +43,31 @@ Lorenz.sys = '
   dxdt[2] = -8.0 / 3.0 * x[2] + x[0] * x[1];
   ' # Lorenz.sys
 compile_sys("lorenz", Lorenz.sys)
-x = lorenz(rep(1, 3), 100, 0.001)
-plot(x[, c(2, 4)], type = 'l', col = "steelblue")
+system.time({x = lorenz(rep(1, 3), 100, 0.001)})
+plot(x[, c(2, 4)], type = 'l', col = "steelblue", main = "Lorenz Attractor")
+VdP.sys = '
+dxdt[0] = x[1];
+dxdt[1] = 2.0 * (1 - x[0] * x[0]) * x[1] - x[0];
+' # Vdp.sys
+compile_sys("vanderpol", VdP.sys, method = "bsd") # Bulirsch-Stoer
+system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
+par(mfrow = c(2, 2), mar = rep(0.5, 4), oma = rep(5, 4), xpd = NA)
+make.plot = function(xy, xlab = NA, ylab = NA)
+  plot(xy, col = "steelblue", lwd = 2, type = "l",
+       axes = FALSE, xlab = xlab, ylab = ylab)
+plot.new()
+make.plot(x[, c(3, 1)]); axis(3); axis(4)
+make.plot(x[, c(1, 2)], "Time", "X1"); axis(1); axis(2)
+make.plot(x[, c(3, 2)], "X2"); axis(1); axis(4)
+title(main = "Van der Pol Oscillator", outer = TRUE)
 ```
 
 ### Performance
 
-One of the main reasons the compiled code has the potential to be very fast is that ODEINT is a header-only library, so the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
+Because ODEINT is a header-only library, the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
 optimization level.)
+
+The Lorenz example above shows about 8 million observer calls per second. The Van der Pol around 10 million per second.
 
 ### To Do
 
@@ -57,6 +76,7 @@ optimization level.)
 1. ~~Allow user to set error tolerances in compiled code~~
 1. Allow user to set error tolerances for system defined in R
 1. Expose implicit solver methods
+1. Convenient dynamic parameter settings
 
 Pull requests are welcome.
 
