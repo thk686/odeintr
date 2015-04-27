@@ -289,8 +289,7 @@ compile_sys = function(name, sys,
   if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
   if (is.na(sys_dim))
   {
-    sys = gsub("x", "x[0]", sys, fixed = TRUE)
-    sys = gsub("dx[0]dt", "dxdt[0]", sys, fixed = TRUE)
+    sys = vectorize_1d_sys(sys)
     sys_dim = 1L
   }
   fn = system.file(file.path("templates", "rcpp_template.cpp"),
@@ -310,6 +309,15 @@ compile_sys = function(name, sys,
              error = function(e) e)
   return(invisible(code))
 }
+
+vectorize_1d_sys = function(sys)
+{
+  if (grepl("\\[\\s*\\d+\\s*\\]", sys)) return(sys)
+  sys = gsub("\\bx\\b", "x[0]", sys)
+  sys = gsub("\\bdxdt\\b", "dxdt[0]", sys)
+  return(sys)
+}
+
 
 make_stepper_constr = function(method, atol, rtol)
 {
@@ -347,7 +355,8 @@ make_stepper_type = function(stepper)
 
 get_sys_dim = function(x)
 {
-  matches = gregexpr("dxdt\\[\\d\\]", x, perl = TRUE)
+  x = gsub("\\[\\s*(\\d+)\\s*\\]", "\\[\\1\\]", x)
+  matches = gregexpr("dxdt\\[\\d+\\]", x)
   lens = attr(matches[[1]], "match.length") - 7L
   starts = unlist(matches) + 5L
   indices = rep(NA, length(starts))
@@ -362,16 +371,16 @@ disable_asserts = function(makevars)
   flags = readLines(con); close(con)
   if (!is.finite(pmatch("-DNDEBUG", flags)))
     flags = paste(flags, "-DNDEBUG")
-  flags = gsub("^\\s+|\\s+$", "", flags, perl = TRUE)
+  flags = gsub("^\\s+|\\s+$", "", flags)
   cat(paste0("CPPFLAGS=", flags, "\n"),
       file = makevars, append = TRUE)
 }
 
 substitute_opt_level = function(flags, level, omit.debug)
 {
-  flags = gsub("-O\\d+", paste0("-O", level), flags, perl = TRUE)
-  if (omit.debug) flags = gsub("\\s*-g\\s*", "", flags, perl = TRUE)
-  flags = gsub("^\\s+|\\s+$", "", flags, perl = TRUE)
+  flags = gsub("-O\\d+", paste0("-O", level), flags)
+  if (omit.debug) flags = gsub("\\s*-g\\s*", "", flags)
+  flags = gsub("^\\s+|\\s+$", "", flags)
   return(flags)
 }
 
@@ -465,3 +474,77 @@ rm.Makevars = function()
   return(invisible(mv))
 }
 
+Jacobian1 = function(f)
+{
+  sep = ".."
+  vn = names(formals(f))[1]
+  e = body(f)
+  for (i in length(e))
+  {
+    es = deparse(e[[i]])
+    if (grepl(paste0("\\b", vn, "\\b"), es))
+    {
+      es = gsub("\\[\\s*(\\d+)\\s*\\]", paste0(sep, "\\1"), es)
+      de = deparse(D(parse(text = es), vn))
+      de = gsub(paste0("\\bx", sep, "(\\d+)"), "x\\[\\1\\]", de)
+      e[[i]] = parse(text = de)
+    }
+  }
+  res = function() NULL
+  formals(res) = formals(f)
+  body(res) = e
+  return(res)
+}
+
+Jacobian2 = function(code, sys_dim = -1)
+{
+  sep = ".."
+  code = paste0(code, collapse = ";")
+  if (sys_dim < 1)
+    sys_dim = get_sys_dim(code)
+  if (is.na(sys_dim))
+  {
+    code = vectorize_1d_sys(code)
+    sys_dim = 1L
+  }
+  code = gsub("^\\s+|\\s+$", "", unlist(strsplit(code, ";")))
+  code = code[nzchar(code) != 0]
+  i = unlist(lapply(code, function(x)
+    as.numeric(sub("\\bdxdt\\[\\s*(\\d+)\\s*\\].*", "\\1", x))))
+  code = code[order(i)]
+  g = function(j, i, rhs)
+  {
+    var = paste0("x", sep, j - 1)
+    deriv = D(parse(text = rhs), var)
+    deriv = deparse(deriv)
+    deriv = gsub(paste0("\\bx", sep, "(\\d+)"), "x\\[\\1\\]", deriv)
+    deriv = paste0("J[", i - 1, ", ", j - 1, "] = ", deriv, ";") 
+  }
+  f = function(i)
+  {
+    rhs = sub("\\bdxdt\\[\\s*\\d+\\s*\\]\\s*=\\s*(.*)", "\\1", code[i])
+    rhs = gsub("\\[\\s*(\\d+)\\s*\\]", paste0(sep, "\\1"), rhs)
+    return(unlist(lapply(1:sys_dim, g, i, rhs)))
+  }
+  paste0(unlist(lapply(1:sys_dim, f)), collapse = "\n")
+}
+
+substitute_vars = function(x, direction = c("forward", "backward"))
+{
+  direction = match.arg(direction)
+  switch(direction,
+         forward =
+         {
+           for (v in letters)
+           {
+             if (!grepl("\\w+\\[.*\\]", x)) break
+             vv = sub(".*(\\w+\\[.*\\]).*", "\\1", x)
+             x = gsub(vv, v, x)
+           }
+           return(x)
+         },
+         backward = 
+         {
+           
+         })
+}
