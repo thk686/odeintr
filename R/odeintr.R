@@ -518,7 +518,7 @@ Jacobian2 = function(code, sys_dim = -1)
     deriv = D(parse(text = rhs), var)
     deriv = deparse(deriv)
     deriv = gsub(paste0("\\bx", sep, "(\\d+)"), "x\\[\\1\\]", deriv)
-    deriv = paste0("J[", i - 1, ", ", j - 1, "] = ", deriv, ";") 
+    deriv = paste0("J(", i - 1, ", ", j - 1, ") = ", deriv, ";") 
   }
   f = function(i)
   {
@@ -527,4 +527,50 @@ Jacobian2 = function(code, sys_dim = -1)
     return(unlist(lapply(1:sys_dim, g, i, rhs)))
   }
   paste0(unlist(lapply(1:sys_dim, f)), collapse = "\n")
+}
+
+handle_pars = function(pars)
+{
+  switch(mode(pars),
+         numeric =
+         {
+           
+         },
+         character = list(globals = make_pars_decl(pars),
+                          setter = make_pars_setter(pars),
+                          getter = make_pars_getter(pars)),
+         stop("Invalid parameter specification"))
+}
+
+make_pars_decl = function(pars)
+  paste("double", paste(pars, collapse = ", "))
+
+make_pars_setter = function(pars)
+{
+  body = paste0(pars, " = ", pars, "_", collapse = ";\n")
+  pars = paste0("double ", pars, "_", collapse = ", ")
+  res = '
+  // [[Rcpp::export]]
+  void set_params(__PARS__)
+  { 
+    __BODY__;
+  }'
+  res = sub("__PARS__", pars, res)
+  res = sub("__BODY__", body, res)
+  return(res)
+}
+
+make_pars_getter = function(pars)
+{
+  body = paste0("out[\"", pars, "\"] = ", pars, collapse = ";\n")
+  res = '
+  // [[Rcpp::export]]
+  List set_params()
+  {
+    List out;
+    __BODY__;
+    return out;
+  }'
+  res = sub("__BODY__", body, res)
+  return(res)
 }
