@@ -26,7 +26,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.125   0.004   0.129
+##   0.113   0.009   0.122
 ```
 
 ```r
@@ -52,20 +52,30 @@ points(logistic_at(0.001, sort(runif(10, 0, 15)), 0.01), col = "darkred")
 
 ![](README_files/figure-html/unnamed-chunk-1-2.png) 
 
+
 ```r
 dxdt = function(x, t) c(x[1] - x[1] * x[2], x[1] * x[2] - x[2])
 obs = function(x, t) c(Prey = x[1], Predator = x[2], Ratio = x[1] / x[2])
-x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)
+system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
+```
+
+```
+##    user  system elapsed 
+##   0.255   0.013   0.268
+```
+
+```r
 plot(x[, c(2, 3)], type = "l", lwd = 2, col = "steelblue", main = "Lotka-Volterra Phase Plot")
 ```
 
-![](README_files/figure-html/unnamed-chunk-1-3.png) 
+![](README_files/figure-html/unnamed-chunk-2-1.png) 
 
 ```r
 plot(x[, c(1, 4)], type = "l", lwd = 2, col = "steelblue", main = "Prey-Predator Ratio")
 ```
 
-![](README_files/figure-html/unnamed-chunk-1-4.png) 
+![](README_files/figure-html/unnamed-chunk-2-2.png) 
+
 
 ```r
 # C++ code
@@ -80,14 +90,15 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.009   0.004   0.014
+##   0.012   0.000   0.012
 ```
 
 ```r
 plot(x[, c(2, 4)], type = 'l', col = "steelblue", main = "Lorenz Attractor")
 ```
 
-![](README_files/figure-html/unnamed-chunk-1-5.png) 
+![](README_files/figure-html/unnamed-chunk-3-1.png) 
+
 
 ```r
 VdP.sys = '
@@ -100,7 +111,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.001
+##   0.002   0.000   0.002
 ```
 
 ```r
@@ -115,14 +126,36 @@ make.plot(x[, c(3, 2)], "X2"); axis(1); axis(4)
 title(main = "Van der Pol Oscillator", outer = TRUE)
 ```
 
-![](README_files/figure-html/unnamed-chunk-1-6.png) 
+![](README_files/figure-html/unnamed-chunk-4-1.png) 
+
+
+```r
+# Use a dynamic parameter
+VdP.sys = '
+dxdt[0] = x[1];
+dxdt[1] = mu * (1 - x[0] * x[0]) * x[1] - x[0];
+' # Vdp.sys
+compile_sys("vpol2", VdP.sys, "mu", method = "bsd")
+par(mfrow = c(2, 2), mar = rep(1, 4), oma = rep(3, 4), xpd = NA)
+for (mu in seq(0.5, 2, len = 4))
+{
+  vpol2_set_params(mu = mu)
+  x = vpol2(rep(1e-4, 2), 100, 0.01)
+  make.plot(x[, 2:3]); box()
+  title(paste("mu =", round(mu, 2)))
+}
+title("Van der Pol Oscillator parameter sweep", outer = TRUE)
+title(xlab = "X1", ylab = "X2", line = 0, outer = TRUE)
+```
+
+![](README_files/figure-html/unnamed-chunk-5-1.png) 
 
 ### Performance
 
 Because ODEINT is a header-only library, the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
 optimization level.)
 
-The Lorenz  and Van der Pol examples above shows about 10 million observer calls per second.
+The Lorenz  and Van der Pol examples above show about 10 million observer calls per second.
 
 ### To Do
 
@@ -131,7 +164,7 @@ The Lorenz  and Van der Pol examples above shows about 10 million observer calls
 1. ~~Allow user to set error tolerances in compiled code~~
 1. Allow user to set error tolerances for system defined in R
 1. Expose implicit solver methods
-1. Convenient dynamic parameter settings
+1. ~~Convenient dynamic parameter settings~~
 
 Pull requests are welcome.
 

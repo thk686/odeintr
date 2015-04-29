@@ -4,14 +4,18 @@
 \alias{compile_sys}
 \title{Compile ODE system}
 \usage{
-compile_sys(name, sys, method = "rk5_i", sys_dim = -1L, atol = 1e-06,
-  rtol = 1e-06, globals = "", headers = "", footers = "",
-  compile = TRUE, ...)
+compile_sys(name, sys, pars = NULL, const = FALSE, method = "rk5_i",
+  sys_dim = -1L, atol = 1e-06, rtol = 1e-06, globals = "",
+  headers = "", footers = "", compile = TRUE, ...)
 }
 \arguments{
 \item{name}{the name of the generated integration function}
 
 \item{sys}{a string containing C++ expressions}
+
+\item{pars}{a named vector of numbers or a vector of names or number of parameters}
+
+\item{const}{declare parameters const if true}
 
 \item{method}{a method string (see Details)}
 
@@ -65,7 +69,11 @@ The following functions are generated:
  \code{name_set_state} \tab
    set current state \tab \code{new_state} \tab void \cr
  \code{name_get_output} \tab
-   fetch observed record \tab void \tab data frame}
+   fetch observed record \tab void \tab data frame \cr
+ \code{name_get_params} \tab
+   get parameter values \tab void \tab a list \cr
+ \code{name_set_params} \tab
+   set parameter values \tab parameters \tab void}
 
 Arguments are:
 
@@ -104,6 +112,18 @@ to a positive value.
 The \code{globals} string can be arbitrary C++ code. You
 can set global named parameter values here. Note that
 these will be defined within the \code{odeintr} namespace.
+
+If you supply the \code{pars} argument, these parameters
+will be compiled into the code. There are three options:
+1) if \code{pars} is a single number, then you can access
+a vector of parameters named \code{pars} of the specified
+length; 2) if \code{pars} is a character vectors, then a
+parameter will be defined for each; and 3) if the character
+vector is named, then the names will be used for the
+parameter names and the associated values will be used
+as defaults. If you specify \code{const = TRUE}, these
+named parameters will be declared const. Otherwise
+parameter getter/setter functions will be defined.
 
 You can insert arbitrary code outside the \code{odeintr}
 names space using \code{headers} and \code{footers}. This code
@@ -144,31 +164,26 @@ plot(logistic(0.001, 15, 0.1), type = "l", lwd = 2, col = "steelblue")
 Sys.sleep(0.5)
 
 # Lotka-Volterra predator-prey equations
+pars = c(alpha = 1, beta = 1, gamma = 1, delta = 1)
 LV.sys = '
-  dxdt[0] = x[0] - 0.1 * x[0] * x[1];
-  dxdt[1] = 0.05 * x[0] * x[1] - 0.5 * x[1];
+  dxdt[0] = alpha * x[0] - beta * x[0] * x[1];
+  dxdt[1] = gamma * x[0] * x[1] - delta * x[1];
 ' # LV.sys
-compile_sys("preypred", LV.sys)
-system.time(preypred_no_record(rep(1, 2), 1e6))
-x = preypred(rep(1, 2), 100, 0.01)
+compile_sys("preypred", LV.sys, pars, TRUE)
+x = preypred(rep(2, 2), 100, 0.01)
 plot(x[, 2:3], type = "l", lwd = 2,
      xlab = "Prey", ylab = "Predator",
      col = "steelblue")
 Sys.sleep(0.5)
 
 # Lorenz model from odeint examples
-Lorenz.globals = '
-  const double sigma_ = 10.0;
-  const double R_ = 28.0;
-  const double b_ = 8.0 / 3.0;
-' # Lorenz.globals
+pars = c(sigma = 10, R = 28, b = 8 / 3)
 Lorenz.sys = '
-  dxdt[0] = sigma_ * (x[1] - x[0]);
-  dxdt[1] = R_ * x[0] - x[1] - x[0] * x[2];
-  dxdt[2] = -b_ * x[2] + x[0] * x[1];
+  dxdt[0] = sigma * (x[1] - x[0]);
+  dxdt[1] = R * x[0] - x[1] - x[0] * x[2];
+  dxdt[2] = -b * x[2] + x[0] * x[1];
 ' # Lorenz.sys
-compile_sys("lorenz", Lorenz.sys, globals = Lorenz.globals)
-system.time(lorenz_no_record(rep(1, 3), 1e5))
+compile_sys("lorenz", Lorenz.sys, pars, TRUE)
 x = lorenz(rep(1, 3), 100, 0.001)
 plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 }
