@@ -122,6 +122,8 @@ integrate_sys = function(sys, init, duration,
 #' 
 #' @param name the name of the generated integration function
 #' @param sys a string containing C++ expressions
+#' @param pars a named vector of numbers or a vector of names or number of parameters
+#' @param const declare parameters const if true
 #' @param method a method string (see Details)
 #' @param sys_dim length of the state vector
 #' @param atol absolute tolerance if using adaptive step size
@@ -155,6 +157,18 @@ integrate_sys = function(sys, init, duration,
 #' The \code{globals} string can be arbitrary C++ code. You
 #' can set global named parameter values here. Note that
 #' these will be defined within the \code{odeintr} namespace.
+#' 
+#' If you supply the \code{pars} argument, these parameters
+#' will be compiled into the code. There are three options:
+#' 1) if \code{pars} is a single number, then you can access
+#' a vector of parameters named \code{pars} of the specified
+#' length; 2) if \code{pars} is a character vectors, then a
+#' parameter will be defined for each; and 3) if the character
+#' vector is named, then the names will be used for the
+#' parameter names and the associated values will be used
+#' as defaults. If you specify \code{const = TRUE}, these
+#' named parameters will be declared const. Otherwise
+#' parameter getter/setter functions will be defined.
 #' 
 #' You can insert arbitrary code outside the \code{odeintr}
 #' names space using \code{headers} and \code{footers}. This code
@@ -219,7 +233,11 @@ integrate_sys = function(sys, init, duration,
 #'  \code{name_set_state} \tab
 #'    set current state \tab \code{new_state} \tab void \cr
 #'  \code{name_get_output} \tab
-#'    fetch observed record \tab void \tab data frame}
+#'    fetch observed record \tab void \tab data frame \cr
+#'  \code{name_get_params} \tab
+#'    get parameter values \tab void \tab a list \cr
+#'  \code{name_set_params} \tab
+#'    set parameter values \tab parameters \tab void}
 #'    
 #' Arguments are:
 #' 
@@ -243,36 +261,33 @@ integrate_sys = function(sys, init, duration,
 #' Sys.sleep(0.5)
 #' 
 #' # Lotka-Volterra predator-prey equations
+#' pars = c(alpha = 1, beta = 1, gamma = 1, delta = 1)
 #' LV.sys = '
-#'   dxdt[0] = x[0] - 0.1 * x[0] * x[1];
-#'   dxdt[1] = 0.05 * x[0] * x[1] - 0.5 * x[1];
+#'   dxdt[0] = alpha * x[0] - beta * x[0] * x[1];
+#'   dxdt[1] = gamma * x[0] * x[1] - delta * x[1];
 #' ' # LV.sys
-#' compile_sys("preypred", LV.sys)
-#' system.time(preypred_no_record(rep(1, 2), 1e6))
-#' x = preypred(rep(1, 2), 100, 0.01)
+#' compile_sys("preypred", LV.sys, pars, TRUE)
+#' x = preypred(rep(2, 2), 100, 0.01)
 #' plot(x[, 2:3], type = "l", lwd = 2,
 #'      xlab = "Prey", ylab = "Predator",
 #'      col = "steelblue")
 #' Sys.sleep(0.5)
 #' 
 #' # Lorenz model from odeint examples
-#' Lorenz.globals = '
-#'   const double sigma_ = 10.0;
-#'   const double R_ = 28.0;
-#'   const double b_ = 8.0 / 3.0;
-#' ' # Lorenz.globals
+#' pars = c(sigma = 10, R = 28, b = 8 / 3)
 #' Lorenz.sys = '
-#'   dxdt[0] = sigma_ * (x[1] - x[0]);
-#'   dxdt[1] = R_ * x[0] - x[1] - x[0] * x[2];
-#'   dxdt[2] = -b_ * x[2] + x[0] * x[1];
+#'   dxdt[0] = sigma * (x[1] - x[0]);
+#'   dxdt[1] = R * x[0] - x[1] - x[0] * x[2];
+#'   dxdt[2] = -b * x[2] + x[0] * x[1];
 #' ' # Lorenz.sys
-#' compile_sys("lorenz", Lorenz.sys, globals = Lorenz.globals)
-#' system.time(lorenz_no_record(rep(1, 3), 1e5))
+#' compile_sys("lorenz", Lorenz.sys, pars, TRUE)
 #' x = lorenz(rep(1, 3), 100, 0.001)
 #' plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 #' }
 #' @export
 compile_sys = function(name, sys,
+                       pars = NULL,
+                       const = FALSE,
                        method = "rk5_i",
                        sys_dim = -1L,
                        atol = 1e-6,
@@ -283,6 +298,15 @@ compile_sys = function(name, sys,
                        compile = TRUE,
                        ...)
 {
+  if (!is.null(pars))
+  {
+    pcode = handle_pars(pars, const)
+    globals = paste0(pcode$globals, globals, collapse = ";\n")
+    if (!is.null(pcode$getter))
+      footers = paste0(pcode$getter, footers, collapse = "\n")
+    if (!is.null(pcode$setter))
+      footers = paste0(pcode$setter, footers, collapse = "\n")
+  }
   sys = paste0(sys, collapse = "; ")
   stepper = make_stepper_type(method)
   stepper_constr = make_stepper_constr(method, atol, rtol)
@@ -292,10 +316,7 @@ compile_sys = function(name, sys,
     sys = vectorize_1d_sys(sys)
     sys_dim = 1L
   }
-  fn = system.file(file.path("templates", "rcpp_template.cpp"),
-                   package = "odeintr", mustWork = TRUE)
-  con = file(fn); code = readLines(con); close(con)
-  code = gsub("__FUNCNAME__", name, code)
+  code = read_template("rcpp_template")
   code = gsub("__STEPPER_TYPE__", stepper, code)
   code = gsub("__STEPPER_CONSTRUCT__", stepper_constr, code)
   code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
@@ -303,93 +324,12 @@ compile_sys = function(name, sys,
   code = sub("__SYS__", sys, code)
   code = sub("__HEADERS__", headers, code)
   code = sub("__FOOTERS__", footers, code)
+  code = gsub("__FUNCNAME__", name, code)
   code = paste0(code, collapse = "\n")
   if (compile)
     tryCatch(Rcpp::sourceCpp(code = code, ...),
              error = function(e) e)
   return(invisible(code))
-}
-
-vectorize_1d_sys = function(sys)
-{
-  if (grepl("\\[\\s*\\d+\\s*\\]", sys)) return(sys)
-  sys = gsub("\\bx\\b", "x[0]", sys)
-  sys = gsub("\\bdxdt\\b", "dxdt[0]", sys)
-  return(sys)
-}
-
-
-make_stepper_constr = function(method, atol, rtol)
-{
-  stepper_constr = "stepper_type()"
-  if (grepl("euler_|rk4_|rk54_i|rk78_i|bs_|bsd_", method))
-    stop("Invalid integration method")
-  if (grepl("_a$", method))
-    stepper_constr = paste0("odeint::make_controlled(", atol, ", ", rtol, ", stepper_type())")
-  if (grepl("_i$", method))
-    stepper_constr = paste0("odeint::make_dense_output(", atol, ", ", rtol, ", stepper_type())") 
-  return(stepper_constr)
-}
-
-make_stepper_type = function(stepper)
-{
-  stepper = sub("_i$|_a$", "", stepper)
-  if (grepl("ab|am|abm", stepper))
-  {
-    steps = as.integer(sub("ab|am|abm([0-9]+)", "\\1", stepper))
-    stepper = sub("(ab|am|abm)[0-9]+", "\\1", stepper)
-  }
-  switch(stepper,
-         euler = "euler<state_type>",
-         rk4 = "runge_kutta4<state_type>",
-         rk54 = "runge_kutta_cash_karp54<state_type>",
-         rk5 = "runge_kutta_dopri5<state_type>",
-         rk78 = "runge_kutta_fehlberg78<state_type>",
-         ab = paste0("adams_bashforth<", steps, ", state_type>"),
-         am = paste0("adams_moulton<", steps, ", state_type>"),
-         abm = paste0("adams_bashforth_moulton<", steps, ", state_type>"),
-         bs = "bulirsch_stoer<state_type>",
-         bsd = "bulirsch_stoer_dense_out<state_type>",
-         paste0(stepper, "<state_type>"))
-}
-
-get_sys_dim = function(x)
-{
-  x = gsub("\\[\\s*(\\d+)\\s*\\]", "\\[\\1\\]", x)
-  matches = gregexpr("dxdt\\[\\d+\\]", x)
-  lens = attr(matches[[1]], "match.length") - 7L
-  starts = unlist(matches) + 5L
-  indices = rep(NA, length(starts))
-  for (i in seq(along = indices))
-    indices[i] = substr(x, starts[i], starts[i] + lens)
-  return(max(as.integer(indices)) + 1L)
-}
-
-disable_asserts = function(makevars)
-{
-  con = pipe(paste("R CMD config CPPFLAGS"))
-  flags = readLines(con); close(con)
-  if (!is.finite(pmatch("-DNDEBUG", flags)))
-    flags = paste(flags, "-DNDEBUG")
-  flags = gsub("^\\s+|\\s+$", "", flags)
-  cat(paste0("CPPFLAGS=", flags, "\n"),
-      file = makevars, append = TRUE)
-}
-
-substitute_opt_level = function(flags, level, omit.debug)
-{
-  flags = gsub("-O\\d+", paste0("-O", level), flags)
-  if (omit.debug) flags = gsub("\\s*-g\\s*", "", flags)
-  flags = gsub("^\\s+|\\s+$", "", flags)
-  return(flags)
-}
-
-process_flags = function(name, level, omit.debug)
-{
-  con = pipe(paste("R CMD config", name))
-  flags = readLines(con); close(con)
-  flags = substitute_opt_level(flags, level, omit.debug)
-  paste0(name, "=", flags)
 }
 
 .opt.env.vars = c("CFLAGS", "FFLAGS", "FCFLAGS", "CXXFLAGS", "CXX1XFLAGS")
@@ -472,105 +412,4 @@ rm.Makevars = function()
     unlink(makevars)
   }
   return(invisible(mv))
-}
-
-Jacobian1 = function(f)
-{
-  sep = ".."
-  vn = names(formals(f))[1]
-  e = body(f)
-  for (i in length(e))
-  {
-    es = deparse(e[[i]])
-    if (grepl(paste0("\\b", vn, "\\b"), es))
-    {
-      es = gsub("\\[\\s*(\\d+)\\s*\\]", paste0(sep, "\\1"), es)
-      de = deparse(D(parse(text = es), vn))
-      de = gsub(paste0("\\bx", sep, "(\\d+)"), "x\\[\\1\\]", de)
-      e[[i]] = parse(text = de)
-    }
-  }
-  res = function() NULL
-  formals(res) = formals(f)
-  body(res) = e
-  return(res)
-}
-
-Jacobian2 = function(code, sys_dim = -1)
-{
-  sep = ".."
-  code = paste0(code, collapse = ";")
-  if (sys_dim < 1)
-    sys_dim = get_sys_dim(code)
-  if (is.na(sys_dim))
-  {
-    code = vectorize_1d_sys(code)
-    sys_dim = 1L
-  }
-  code = gsub("^\\s+|\\s+$", "", unlist(strsplit(code, ";")))
-  code = code[nzchar(code) != 0]
-  i = unlist(lapply(code, function(x)
-    as.numeric(sub("\\bdxdt\\[\\s*(\\d+)\\s*\\].*", "\\1", x))))
-  code = code[order(i)]
-  g = function(j, i, rhs)
-  {
-    var = paste0("x", sep, j - 1)
-    deriv = D(parse(text = rhs), var)
-    deriv = deparse(deriv)
-    deriv = gsub(paste0("\\bx", sep, "(\\d+)"), "x\\[\\1\\]", deriv)
-    deriv = paste0("J(", i - 1, ", ", j - 1, ") = ", deriv, ";") 
-  }
-  f = function(i)
-  {
-    rhs = sub("\\bdxdt\\[\\s*\\d+\\s*\\]\\s*=\\s*(.*)", "\\1", code[i])
-    rhs = gsub("\\[\\s*(\\d+)\\s*\\]", paste0(sep, "\\1"), rhs)
-    return(unlist(lapply(1:sys_dim, g, i, rhs)))
-  }
-  paste0(unlist(lapply(1:sys_dim, f)), collapse = "\n")
-}
-
-handle_pars = function(pars)
-{
-  switch(mode(pars),
-         numeric =
-         {
-           
-         },
-         character = list(globals = make_pars_decl(pars),
-                          setter = make_pars_setter(pars),
-                          getter = make_pars_getter(pars)),
-         stop("Invalid parameter specification"))
-}
-
-make_pars_decl = function(pars)
-  paste("double", paste(pars, collapse = ", "))
-
-make_pars_setter = function(pars)
-{
-  body = paste0(pars, " = ", pars, "_", collapse = ";\n")
-  pars = paste0("double ", pars, "_", collapse = ", ")
-  res = '
-  // [[Rcpp::export]]
-  void set_params(__PARS__)
-  { 
-    __BODY__;
-  }'
-  res = sub("__PARS__", pars, res)
-  res = sub("__BODY__", body, res)
-  return(res)
-}
-
-make_pars_getter = function(pars)
-{
-  body = paste0("out[\"", pars, "\"] = ", pars, collapse = ";\n")
-  res = '
-  // [[Rcpp::export]]
-  List set_params()
-  {
-    List out;
-    __BODY__;
-    return out;
-  }'
-  res = sub("__BODY__", body, res)
-  return(res)
 }
