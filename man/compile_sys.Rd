@@ -52,7 +52,7 @@ The following functions are generated:
    data frame \cr
  \code{name_at} \tab
    specified observer calls \tab
-   \code{init, times, step_size = 1.0} \tab
+   \code{init, times, step_size = 1.0, start = 0.0} \tab
    data frame \cr
  \code{name_continue_at} \tab
    specified observer calls starting from previous final state \tab

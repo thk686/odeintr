@@ -26,7 +26,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.113   0.009   0.122
+##   0.114   0.015   0.147
 ```
 
 ```r
@@ -61,7 +61,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.255   0.013   0.268
+##   0.241   0.009   0.251
 ```
 
 ```r
@@ -90,7 +90,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.012   0.000   0.012
+##   0.009   0.004   0.014
 ```
 
 ```r
