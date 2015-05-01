@@ -2,7 +2,6 @@
 
 #include "../inst/include/odeintr.h"
 
-// Globals required because observer is passed by value
 static std::vector<List> rec_x;
 static std::vector<double> rec_t;
 
