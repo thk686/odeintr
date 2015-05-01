@@ -216,7 +216,7 @@ integrate_sys = function(sys, init, duration,
 #'    data frame \cr
 #'  \code{name_at} \tab
 #'    specified observer calls \tab
-#'    \code{init, times, step_size = 1.0} \tab
+#'    \code{init, times, step_size = 1.0, start = 0.0} \tab
 #'    data frame \cr
 #'  \code{name_continue_at} \tab
 #'    specified observer calls starting from previous final state \tab
@@ -327,8 +327,7 @@ compile_sys = function(name, sys,
   code = gsub("__FUNCNAME__", name, code)
   code = paste0(code, collapse = "\n")
   if (compile)
-    tryCatch(Rcpp::sourceCpp(code = code, ...),
-             error = function(e) e)
+    try(Rcpp::sourceCpp(code = code, ...))
   return(invisible(code))
 }
 
