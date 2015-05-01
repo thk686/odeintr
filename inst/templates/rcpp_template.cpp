@@ -54,10 +54,10 @@ reserve(odeintr::vec_type::size_type n)
 Rcpp::List __FUNCNAME___get_output()
 {
   Rcpp::List out;
-  out("t") = Rcpp::wrap(odeintr::rec_t);
+  out("Time") = Rcpp::wrap(odeintr::rec_t);
   for (int i = 0; i != odeintr::N; ++i)
   {
-    auto cnam = std::string("x") + std::to_string(i + 1);
+    auto cnam = std::string("X") + std::to_string(i + 1);
     out(cnam) = Rcpp::wrap(odeintr::rec_x[i]);
   }
   out.attr("class") = "data.frame";
@@ -108,12 +108,13 @@ Rcpp::List __FUNCNAME___adap(Rcpp::NumericVector init,
 // [[Rcpp::export]]
 Rcpp::List __FUNCNAME___at(Rcpp::NumericVector init,
                            std::vector<double> times,
-                           double step_size = 1.0)
+                           double step_size = 1.0,
+                           double start = 0.0)
 {
   __FUNCNAME___set_state(init);
   __FUNCNAME___reset_observer(); reserve(times.size());
   odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
-                          0.0, times[0], step_size);
+                          start, times[0], step_size);
   odeint::integrate_times(odeintr::stepper, odeintr::sys, odeintr::state,
                           times.begin(), times.end(), step_size, odeintr::obs);
   return __FUNCNAME___get_output();
