@@ -3,4 +3,6 @@
 README.Rmd
 README.html
 README_files
+.travis.yaml
+
 
