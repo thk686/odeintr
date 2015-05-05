@@ -41,6 +41,7 @@ namespace odeintr
       rec_x[i].push_back(x[i]);
     rec_t.push_back(t);
   }
+  
 }; // namespace odeintr
 
 static void
@@ -125,7 +126,7 @@ Rcpp::List
 __FUNCNAME___continue_at(std::vector<double> times, double step_size = 1.0)
 {
   double start = odeintr::rec_t.back();
-  __FUNCNAME___reset_observer(); reserve(times.size());
+  __FUNCNAME___reset_observer(); reserve(odeintr::rec_t.size() + times.size());
   odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
                           start, times[0], step_size);
   odeint::integrate_times(odeintr::stepper, odeintr::sys, odeintr::state,

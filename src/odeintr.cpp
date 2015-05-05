@@ -62,3 +62,4 @@ List integrate_sys_adapt(Function derivs, Function recfun, state_type init,
   List out; out("t") = rec_t; out("x") = rec_x;
   return out;
 }
+

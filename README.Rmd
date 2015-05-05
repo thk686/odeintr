@@ -86,7 +86,7 @@ for (mu in seq(0.5, 2, len = 4))
   make.plot(x[, 2:3]); box()
   title(paste("mu =", round(mu, 2)))
 }
-title("Van der Pol Oscillator parameter sweep", outer = TRUE)
+title("Van der Pol Oscillator Parameter Sweep", outer = TRUE)
 title(xlab = "X1", ylab = "X2", line = 0, outer = TRUE)
 ```
 
@@ -100,7 +100,7 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 ### To Do
 
 1. ~~Add additional integration methods from odeint~~
-1. Extend customized observer to compiled code
+1. ~~Extend customized observer to compiled code~~
 1. ~~Allow user to set error tolerances in compiled code~~
 1. Allow user to set error tolerances for system defined in R
 1. Expose implicit solver methods

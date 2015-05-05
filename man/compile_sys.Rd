@@ -6,7 +6,7 @@
 \usage{
 compile_sys(name, sys, pars = NULL, const = FALSE, method = "rk5_i",
   sys_dim = -1L, atol = 1e-06, rtol = 1e-06, globals = "",
-  headers = "", footers = "", compile = TRUE, ...)
+  headers = "", footers = "", compile = TRUE, observer = NULL, ...)
 }
 \arguments{
 \item{name}{the name of the generated integration function}
@@ -32,6 +32,8 @@ compile_sys(name, sys, pars = NULL, const = FALSE, method = "rk5_i",
 \item{footers}{code to appear after the \code{odeintr} namespace}
 
 \item{compile}{if false, just return the code}
+
+\item{observer}{an optional R function to record output}
 
 \item{...}{passed to \code{\link{sourceCpp}}}
 }
@@ -125,8 +127,19 @@ as defaults. If you specify \code{const = TRUE}, these
 named parameters will be declared const. Otherwise
 parameter getter/setter functions will be defined.
 
+If \code{observer} is a function, then this function will
+be used to record the output of the integration. It is called
+with signature \code{obsever(x, t)}. Its return value will
+be coerced to a list. Observer getter/setter functions will be
+emitted as well (\code{name_g(s)et_observer}). You can also
+get and set an output processing function (\code{name_g(s)et_output_processor}).
+It will be passed
+a 2-element list. The first element is a vector of time points
+and the 2nd element is a list of lists, one list per time
+point. The default processor converts this to a data frame.
+
 You can insert arbitrary code outside the \code{odeintr}
-names space using \code{headers} and \code{footers}. This code
+name space using \code{headers} and \code{footers}. This code
 can be anything compatible with Rcpp. You could for example
 define exported Rcpp functions that set simulation paramters.
 \code{headers} is inserted right after the Rcpp and ODEINT

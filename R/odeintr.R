@@ -102,20 +102,9 @@ integrate_sys = function(sys, init, duration,
     integrate_sys_adapt(sys, observer, init, duration, step_size, start)
   else
     integrate_sys_const(sys, observer, init, duration, step_size, start)
-  if (length(res[[1]]) == 0) return(NULL)
-  x = res[[2]]; out = list()
-  if (any(diff(sapply(x, length)) != 0)) return(res)
-  n = length(x[[1]]); length(out) = n + 1
-  for (i in 1:length(x)) for (j in 1:n)
-      out[[j + 1]][i] = x[[i]][[j]]
-  out[[1]] = res[[1]]
-  xnames = names(x[[1]])
-  if (is.null(xnames) || length(xnames) != length(x[[1]]))
-    xnames = paste0("x", 1:length(x[[1]]))
-  names(out) = c("t", xnames)
-  as.data.frame(out)
+  proc_output(res)
 }
-  
+
 #' Compile ODE system
 #' 
 #' Generates an integrator using Rcpp
@@ -132,6 +121,7 @@ integrate_sys = function(sys, init, duration,
 #' @param headers code to appear before the \code{odeintr} namespace
 #' @param footers code to appear after the \code{odeintr} namespace
 #' @param compile if false, just return the code
+#' @param observer an optional R function to record output
 #' @param ... passed to \code{\link{sourceCpp}}
 #' 
 #' @details C++ code is generated and compiled with
@@ -170,8 +160,19 @@ integrate_sys = function(sys, init, duration,
 #' named parameters will be declared const. Otherwise
 #' parameter getter/setter functions will be defined.
 #' 
+#' If \code{observer} is a function, then this function will
+#' be used to record the output of the integration. It is called
+#' with signature \code{obsever(x, t)}. Its return value will
+#' be coerced to a list. Observer getter/setter functions will be
+#' emitted as well (\code{name_g(s)et_observer}). You can also
+#' get and set an output processing function (\code{name_g(s)et_output_processor}).
+#' It will be passed
+#' a 2-element list. The first element is a vector of time points
+#' and the 2nd element is a list of lists, one list per time
+#' point. The default processor converts this to a data frame.
+#' 
 #' You can insert arbitrary code outside the \code{odeintr}
-#' names space using \code{headers} and \code{footers}. This code
+#' name space using \code{headers} and \code{footers}. This code
 #' can be anything compatible with Rcpp. You could for example
 #' define exported Rcpp functions that set simulation paramters.
 #' \code{headers} is inserted right after the Rcpp and ODEINT
@@ -296,6 +297,7 @@ compile_sys = function(name, sys,
                        headers = "",
                        footers = "",
                        compile = TRUE,
+                       observer = NULL,
                        ...)
 {
   if (!is.null(pars))
@@ -316,7 +318,9 @@ compile_sys = function(name, sys,
     sys = vectorize_1d_sys(sys)
     sys_dim = 1L
   }
-  code = read_template("rcpp_template")
+  code = if (!is.null(observer))
+    read_template("compile_sys_r_obs_template") 
+    else read_template("compile_sys_template")
   code = gsub("__STEPPER_TYPE__", stepper, code)
   code = gsub("__STEPPER_CONSTRUCT__", stepper_constr, code)
   code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
@@ -325,9 +329,13 @@ compile_sys = function(name, sys,
   code = sub("__HEADERS__", headers, code)
   code = sub("__FOOTERS__", footers, code)
   code = gsub("__FUNCNAME__", name, code)
-  code = paste0(code, collapse = "\n")
   if (compile)
     try(Rcpp::sourceCpp(code = code, ...))
+  if (!is.null(observer))
+  {
+    try(do.call(paste0(name, "_set_observer"), list(f = observer)))
+    try(do.call(paste0(name, "_set_output_processor"), list(f = proc_output)))
+  }
   return(invisible(code))
 }
 
@@ -412,3 +420,5 @@ rm.Makevars = function()
   }
   return(invisible(mv))
 }
+
+
