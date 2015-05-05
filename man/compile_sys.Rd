@@ -6,7 +6,8 @@
 \usage{
 compile_sys(name, sys, pars = NULL, const = FALSE, method = "rk5_i",
   sys_dim = -1L, atol = 1e-06, rtol = 1e-06, globals = "",
-  headers = "", footers = "", compile = TRUE, observer = NULL, ...)
+  headers = "", footers = "", compile = TRUE, observer = NULL,
+  env = new.env(), ...)
 }
 \arguments{
 \item{name}{the name of the generated integration function}
@@ -34,6 +35,8 @@ compile_sys(name, sys, pars = NULL, const = FALSE, method = "rk5_i",
 \item{compile}{if false, just return the code}
 
 \item{observer}{an optional R function to record output}
+
+\item{env}{install functions into this environment}
 
 \item{...}{passed to \code{\link{sourceCpp}}}
 }
