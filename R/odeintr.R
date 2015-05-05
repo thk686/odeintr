@@ -122,6 +122,7 @@ integrate_sys = function(sys, init, duration,
 #' @param footers code to appear after the \code{odeintr} namespace
 #' @param compile if false, just return the code
 #' @param observer an optional R function to record output
+#' @param env install functions into this environment
 #' @param ... passed to \code{\link{sourceCpp}}
 #' 
 #' @details C++ code is generated and compiled with
@@ -298,6 +299,7 @@ compile_sys = function(name, sys,
                        footers = "",
                        compile = TRUE,
                        observer = NULL,
+                       env = new.env(),
                        ...)
 {
   if (!is.null(pars))
@@ -329,12 +331,15 @@ compile_sys = function(name, sys,
   code = sub("__HEADERS__", headers, code)
   code = sub("__FOOTERS__", footers, code)
   code = gsub("__FUNCNAME__", name, code)
-  if (compile)
-    try(Rcpp::sourceCpp(code = code, ...))
-  if (!is.null(observer))
+  if (compile &&
+      !inherits(try(Rcpp::sourceCpp(code = code, env = env, ...)), "try-error"))
   {
-    try(do.call(paste0(name, "_set_observer"), list(f = observer)))
-    try(do.call(paste0(name, "_set_output_processor"), list(f = proc_output)))
+    if (!is.null(observer))
+    {
+      try(do.call(paste0(name, "_set_observer"), list(f = observer)))
+      try(do.call(paste0(name, "_set_output_processor"), list(f = proc_output)))
+    }
+    attach(env)
   }
   return(invisible(code))
 }
