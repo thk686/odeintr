@@ -8,7 +8,7 @@ read_template = function(name)
   con = file(fn)
   res = readLines(con)
   close(con)
-  res
+  paste0(res, collapse = "\n")
 }
 
 vectorize_1d_sys = function(sys)
@@ -232,3 +232,26 @@ make_pars_getter = function(pars)
   code = sub("__BODY__", body, code)
   return(paste0(code, collapse = "\n"))
 }
+
+proc_output = function(res)
+{
+  if (length(res[[1]]) == 0) return(NULL)
+  x = res[[2]]; out = list(res[[1]])
+  if (any(diff(sapply(x, length)) != 0)) return(res)
+  out = append(out, rw2cw(x))
+  xnames = names(x[[1]])
+  if (is.null(xnames) || length(xnames) != length(x[[1]]))
+    xnames = paste0("X", 1:length(x[[1]]))
+  names(out) = c("Time", xnames)
+  attr(out, "row.names") = c(NA, -length(out[[1]]))
+  class(out) = "data.frame"
+  return(out)
+}
+
+rw2cw = function(x)
+{
+  lapply(lapply(1:length(x[[1]]),
+                function(i) lapply(x, function(a) a[[i]])),
+         unlist)
+}
+
