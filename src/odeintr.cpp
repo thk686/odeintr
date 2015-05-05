@@ -2,7 +2,6 @@
 
 #include "../inst/include/odeintr.h"
 
-// Globals required because observer is passed by value
 static std::vector<List> rec_x;
 static std::vector<double> rec_t;
 
@@ -63,3 +62,4 @@ List integrate_sys_adapt(Function derivs, Function recfun, state_type init,
   List out; out("t") = rec_t; out("x") = rec_x;
   return out;
 }
+
