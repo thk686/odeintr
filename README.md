@@ -26,7 +26,11 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
+<<<<<<< HEAD
 ##   0.118   0.005   0.123
+=======
+##    0.12    0.00    0.12
+>>>>>>> devel
 ```
 
 ```r
@@ -61,7 +65,11 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
+<<<<<<< HEAD
 ##   0.215   0.017   0.233
+=======
+##   0.223   0.008   0.231
+>>>>>>> devel
 ```
 
 ```r
@@ -111,7 +119,11 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
+<<<<<<< HEAD
 ##   0.003   0.000   0.002
+=======
+##   0.001   0.000   0.002
+>>>>>>> devel
 ```
 
 ```r
@@ -165,6 +177,7 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 1. Allow user to set error tolerances for system defined in R
 1. Expose implicit solver methods
 1. ~~Convenient dynamic parameter settings~~
+1. ~~Install emitted function in a new enviroment~~
 
 Pull requests are welcome.
 
