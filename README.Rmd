@@ -105,6 +105,7 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 1. Allow user to set error tolerances for system defined in R
 1. Expose implicit solver methods
 1. ~~Convenient dynamic parameter settings~~
+1. ~~Install emitted function in a new enviroment~~
 
 Pull requests are welcome.
 
