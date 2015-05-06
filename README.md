@@ -10,7 +10,7 @@ the [Boost ODEINT package](http://www.odeint.com). Some features:
 1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
 1. Results returned as a simple data frame ready for analysis and plotting
-1. Ability to specify a custom observer in R that can return arbitrary data (not yet for compiled code)
+1. Ability to specify a custom observer in R that can return arbitrary data
 1. Three options for calling the observer: at regular intervals, after each update step or at specified times
 1. Ability to alter system state and restart simulations where you left off
 1. Can compile an implicit solver with symbolic evaluation of the Jacobian
@@ -27,7 +27,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.095   0.008   0.104
+##   0.087   0.007   0.102
 ```
 
 ```r
@@ -43,7 +43,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.001
+##   0.000   0.001   0.000
 ```
 
 ```r
@@ -62,7 +62,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.179   0.038   0.327
+##   0.204   0.029   0.318
 ```
 
 ```r
@@ -91,7 +91,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.012   0.005   0.023
+##   0.013   0.004   0.017
 ```
 
 ```r
@@ -112,7 +112,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.002   0.001   0.002
+##   0.002   0.000   0.003
 ```
 
 ```r
