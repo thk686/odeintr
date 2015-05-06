@@ -404,6 +404,18 @@ compile_sys = function(name, sys,
 #' x = stiff(c(2, 1), 7, 0.001)
 #' plot(x[, 1:2], type = "l", lwd = 2, col = "steelblue")
 #' lines(x[, c(1, 3)], lwd = 2, col = "darkred")
+#' # Robertson chemical kinetics problem
+#' Robertson = '
+#' dxdt[0] = -alpha * x[0] + beta * x[1] * x[2];
+#' dxdt[1] = alpha * x[0] - beta * x[1] * x[2] - gamma * x[1] * x[1];
+#' dxdt[2] = gamma * x[1] * x[1];
+#' ' # Robertson
+#' pars = c(alpha = 0.04, beta = 1e4, gamma = 3e7)
+#' init.cond = c(1, 0, 0)
+#' cat(JacobianCpp(Robertson))
+#' compile_implicit("robertson", Robertson, pars, TRUE)
+#' x = robertson_adap(init.cond, 1e6)
+#' plot(x[, -1])
 #' }
 #' @rdname implicit
 #' @export
