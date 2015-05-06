@@ -344,6 +344,132 @@ compile_sys = function(name, sys,
   return(invisible(code))
 }
 
+
+#' Compile Stiff ODE system solver
+#' 
+#' Generates a stiff integrator using Rcpp
+#' 
+#' @param name the name of the generated integration function
+#' @param sys a string containing C++ expressions
+#' @param pars a named vector of numbers or a vector of names or number of parameters
+#' @param const declare parameters const if true
+#' @param sys_dim length of the state vector
+#' @param jacobian C++ expressions computing the Jacobian
+#' @param atol absolute tolerance if using adaptive step size
+#' @param rtol relative tolerance if using adaptive step size
+#' @param globals a string with global C++ declarations
+#' @param headers code to appear before the \code{odeintr} namespace
+#' @param footers code to appear after the \code{odeintr} namespace
+#' @param compile if false, just return the code
+#' @param env install functions into this environment
+#' @param ... passed to \code{\link{sourceCpp}}
+#' 
+#' @details
+#' See \code{\link{compile_sys}} for details. This function behaves
+#' identically except that you cannot specify a custom observer and
+#' you must provide a Jacobian C++ function body. By default, the
+#' Jacobian will be symbollically computed from the system function
+#' using the \code{JacobianCpp} function.
+#' This uses \code{\link{D}} to compute the symbolic derivatives.
+#' 
+#' If you provide a hand-written Jacobian, it must update the matrix
+#' \code{J} and the vector \code{dfdt}. It is perhaps easiest to use
+#' \code{JacobianCpp} to see the required format.
+#' 
+#' @author Timothy H. Keitt
+#' 
+#' @seealso \code{\link{set_optimization}}, \code{\link{compile_sys}}
+#' 
+#' @examples
+#' \dontrun{
+#' # Lorenz model from odeint examples
+#' pars = c(sigma = 10, R = 28, b = 8 / 3)
+#' Lorenz.sys = '
+#'   dxdt[0] = sigma * (x[1] - x[0]);
+#'   dxdt[1] = R * x[0] - x[1] - x[0] * x[2];
+#'   dxdt[2] = -b * x[2] + x[0] * x[1];
+#' ' # Lorenz.sys
+#' cat(JacobianCpp(Lorenz.sys))
+#' compile_implicit("lorenz", Lorenz.sys, pars, TRUE)
+#' x = lorenz(rep(1, 3), 100, 0.001)
+#' plot(x[, c(2, 4)], type = 'l', col = "steelblue")
+#' Sys.sleep(0.5)
+#' # Stiff example from odeint docs
+#' Stiff.sys = '
+#'  dxdt[0] = -101.0 * x[0] - 100.0 * x[1];
+#'  dxdt[1] = x[0];
+#' ' # Stiff.sys
+#' cat(JacobianCpp(Stiff.sys))
+#' compile_implicit("stiff", Stiff.sys)
+#' x = stiff(c(2, 1), 7, 0.001)
+#' plot(x[, 1:2], type = "l", lwd = 2, col = "steelblue")
+#' lines(x[, c(1, 3)], lwd = 2, col = "darkred")
+#' }
+#' @rdname implicit
+#' @export
+compile_implicit = function(name, sys,
+                            pars = NULL,
+                            const = FALSE,
+                            sys_dim = -1L,
+                            jacobian = JacobianCpp(sys, sys_dim),
+                            atol = 1e-6,
+                            rtol = 1e-6,
+                            globals = "", 
+                            headers = "",
+                            footers = "",
+                            compile = TRUE,
+                            env = new.env(),
+                            ...)
+{
+  if (!is.null(pars))
+  {
+    pcode = handle_pars(pars, const)
+    globals = paste0(pcode$globals, globals, collapse = ";\n")
+    if (!is.null(pcode$getter))
+      footers = paste0(pcode$getter, footers, collapse = "\n")
+    if (!is.null(pcode$setter))
+      footers = paste0(pcode$setter, footers, collapse = "\n")
+  }
+  sys = paste0(sys, collapse = "; ")
+  jacobian = paste0(jacobian, collapse = "; ")
+  if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
+  if (is.na(sys_dim))
+  {
+    sys = vectorize_1d_sys(sys)
+    sys_dim = 1L
+  }
+  code = read_template("compile_stiff_sys_template")
+  code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
+  code = sub("__ATOL__", as.character(atol), code)
+  code = sub("__RTOL__", as.character(rtol), code)
+  code = sub("__GLOBALS__", globals, code)
+  code = sub("__SYS__", sys, code)
+  code = sub("__JACOBIAN__", jacobian, code)
+  code = sub("__HEADERS__", headers, code)
+  code = sub("__FOOTERS__", footers, code)
+  code = gsub("__FUNCNAME__", name, code)
+  if (compile &&
+        !inherits(try(Rcpp::sourceCpp(code = code, env = env, ...)), "try-error"))
+    attach(env)
+  return(invisible(code))
+}
+
+#' @rdname implicit
+#' @export
+JacobianCpp = function(sys, sys_dim = -1L)
+{
+  if (sys_dim < 1)
+    sys_dim = get_sys_dim(sys)
+  if (is.na(sys_dim))
+  {
+    code = vectorize_1d_sys(sys)
+    sys_dim = 1L
+  }
+  jac = Jacobian2(sys, sys_dim)
+  dfdt = paste0("dfdt[", 1:sys_dim - 1, "] = 0.0;", collapse = "\n")
+  paste(jac, dfdt, sep = "\n")
+}
+
 .opt.env.vars = c("CFLAGS", "FFLAGS", "FCFLAGS", "CXXFLAGS", "CXX1XFLAGS")
 
 #' Set compiler optimization

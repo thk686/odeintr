@@ -35,15 +35,22 @@ struct Obs
   Function recf;
 };
 
+static void
+init_obs(int sz)
+{
+  rec_x.resize(0);
+  rec_t.resize(0);
+  rec_x.reserve(sz);
+  rec_t.reserve(sz);  
+}
+
 // [[Rcpp::export]]
 List integrate_sys_const(Function derivs, Function recfun, state_type init,
                          double duration, double step_size = 1.0,
                          double start = 0.0)
 {
-  rec_x.resize(0); rec_t.resize(0);
-  rec_x.reserve(duration / step_size);
-  rec_t.reserve(duration / step_size);
   Sys s(derivs); Obs o(recfun);
+  init_obs(duration / step_size);
   odeint::integrate_const(stepper, s, init, start, start + duration, step_size, o);
   List out; out("t") = rec_t; out("x") = rec_x;
   return out;
@@ -54,10 +61,8 @@ List integrate_sys_adapt(Function derivs, Function recfun, state_type init,
                          double duration, double step_size = 1.0,
                          double start = 0.0)
 {
-  rec_x.resize(0); rec_t.resize(0);
-  rec_x.reserve(duration / step_size);
-  rec_t.reserve(duration / step_size);
   Sys s(derivs); Obs o(recfun);
+  init_obs(duration / step_size);
   odeint::integrate_adaptive(stepper, s, init, start, start + duration, step_size, o);
   List out; out("t") = rec_t; out("x") = rec_x;
   return out;
