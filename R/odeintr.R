@@ -370,7 +370,9 @@ compile_sys = function(name, sys,
 #' you must provide a Jacobian C++ function body. By default, the
 #' Jacobian will be symbollically computed from the system function
 #' using the \code{JacobianCpp} function.
-#' This uses \code{\link{D}} to compute the symbolic derivatives.
+#' This uses \code{\link{D}} to compute the symbolic derivatives. The
+#' integration methods is the 4th-order Rosenbrock implicit solver.
+#' Step size is adaptive and output is interpolated.
 #' 
 #' If you provide a hand-written Jacobian, it must update the matrix
 #' \code{J} and the vector \code{dfdt}. It is perhaps easiest to use
@@ -414,8 +416,12 @@ compile_sys = function(name, sys,
 #' init.cond = c(1, 0, 0)
 #' cat(JacobianCpp(Robertson))
 #' compile_implicit("robertson", Robertson, pars, TRUE)
-#' x = robertson_adap(init.cond, 1e6)
-#' plot(x[, -1])
+#' at = 10 ^ seq(-5, 5, len = 400)
+#' x = robertson_at(init.cond, at)
+#' par(mfrow = c(3, 1), mar = rep(0.5, 4), oma = rep(5, 4), xpd = NA)
+#' plot(x[, 1:2], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA); axis(2); box()
+#' plot(x[, c(1, 3)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA); axis(4); box()
+#' plot(x[, c(1, 4)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F); axis(2); axis(1); box()
 #' }
 #' @rdname implicit
 #' @export
