@@ -5,4 +5,4 @@ README.html
 README_files
 .travis.yaml
 
-
+^\.travis\.yml$
