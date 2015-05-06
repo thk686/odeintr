@@ -1,11 +1,24 @@
-language: r
-sudo: required
+# Sample .travis.yml for R projects from https://github.com/craigcitro/r-travis
+
+language: c
+
 before_install:
-# We need this line to have g++4.8 available in apt
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
+  - curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
+  - chmod 755 ./travis-tool.sh
+  - ./travis-tool.sh bootstrap
+
 install:
-  - sudo apt-get install -qq gcc-4.8 g++-4.8 
-# We want to compile with g++ 4.8 when rather than the default g++
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-  
+  - ./travis-tool.sh install_deps
+
+script: ./travis-tool.sh run_tests
+
+after_failure:
+  - ./travis-tool.sh dump_logs
+
+env:
+  - WARNINGS_ARE_ERRORS=1
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
