@@ -1,6 +1,6 @@
 Package: odeintr
 Type: Package
-Title: C++ ODE Solvers Compiled On-Demand
+Title: C++ ODE Solvers Compiled on-Demand
 Version: 1.0
 Date: 2015-02-13
 Author: Timothy H. Keitt
