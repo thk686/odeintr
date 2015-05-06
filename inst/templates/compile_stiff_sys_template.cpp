@@ -48,7 +48,7 @@ namespace odeintr
   
   struct stiff_system_jacobi
   {
-      void operator()(const stiff_vec x, stiff_mat &J,
+      void operator()(const stiff_vec &x, stiff_mat &J,
                       const double t, stiff_vec &dfdt)
       {
         __JACOBIAN__;
