@@ -7,12 +7,13 @@ the [Boost ODEINT package](http://www.odeint.com). Some features:
 
 1. Simple specification of the ODE system
 1. Intelligent defaults, easily overridden, used throughout
-1. A wide range of intergration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
+1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
 1. Results returned as a simple data frame ready for analysis and plotting
-1. Ability to specify a custom observer in R that can return aribtrary data (not yet for compiled code)
+1. Ability to specify a custom observer in R that can return arbitrary data (not yet for compiled code)
 1. Three options for calling the observer: at regular intervals, after each update step or at specified times
 1. Ability to alter system state and restart simulations where you left off
+1. Can compile an implicit solver with symbolic evaluation of the Jacobian
 1. You can easily save and edit the generated C++ code
 
 ### Examples
@@ -26,7 +27,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##    0.12    0.00    0.12
+##   0.095   0.008   0.104
 ```
 
 ```r
@@ -42,7 +43,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##       0       0       0
+##   0.001   0.000   0.001
 ```
 
 ```r
@@ -61,7 +62,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.223   0.008   0.231
+##   0.179   0.038   0.327
 ```
 
 ```r
@@ -90,7 +91,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.012   0.000   0.012
+##   0.012   0.005   0.023
 ```
 
 ```r
@@ -111,7 +112,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.002
+##   0.002   0.001   0.002
 ```
 
 ```r
@@ -150,9 +151,37 @@ title(xlab = "X1", ylab = "X2", line = 0, outer = TRUE)
 
 ![](README_files/figure-html/unnamed-chunk-5-1.png) 
 
+
+```r
+# Stiff example from odeint docs
+Stiff.sys = '
+  dxdt[0] = -101.0 * x[0] - 100.0 * x[1];
+  dxdt[1] = x[0];
+' # Stiff.sys
+cat(JacobianCpp(Stiff.sys))
+```
+
+```
+## J(0, 0) = -101;
+## J(0, 1) = -100;
+## J(1, 0) = 1;
+## J(1, 1) = 0;
+## dfdt[0] = 0.0;
+## dfdt[1] = 0.0;
+```
+
+```r
+compile_implicit("stiff", Stiff.sys)
+x = stiff(c(2, 1), 5, 0.001)
+plot(x[, 1:2], type = "l", lwd = 2, col = "steelblue")
+lines(x[, c(1, 3)], lwd = 2, col = "darkred")
+```
+
+![](README_files/figure-html/unnamed-chunk-6-1.png) 
+
 ### Performance
 
-Because ODEINT is a header-only library, the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimziation in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
+Because ODEINT is a header-only library, the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimization in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
 optimization level.)
 
 The Lorenz  and Van der Pol examples above show about 10 million observer calls per second.
@@ -162,10 +191,11 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 1. ~~Add additional integration methods from odeint~~
 1. ~~Extend customized observer to compiled code~~
 1. ~~Allow user to set error tolerances in compiled code~~
-1. Allow user to set error tolerances for system defined in R
-1. Expose implicit solver methods
+1. Allow user to set error tolerances for system defined in R (if possible)
+1. ~~Expose implicit solver methods~~
+1. ~~Compute Jacobian symbolically~~
 1. ~~Convenient dynamic parameter settings~~
-1. ~~Install emitted function in a new enviroment~~
+1. ~~Install emitted function in a new environment~~
 
 Pull requests are welcome.
 
