@@ -27,7 +27,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.151   0.023   0.189
+##   0.108   0.011   0.135
 ```
 
 ```r
@@ -43,7 +43,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.000   0.000   0.001
+##       0       0       0
 ```
 
 ```r
@@ -62,7 +62,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.196   0.014   0.292
+##   0.237   0.006   0.242
 ```
 
 ```r
@@ -91,7 +91,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.017   0.000   0.018
+##   0.012   0.000   0.012
 ```
 
 ```r
@@ -112,7 +112,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.004   0.000   0.007
+##   0.001   0.000   0.002
 ```
 
 ```r
@@ -178,6 +178,53 @@ lines(x[, c(1, 3)], lwd = 2, col = "darkred")
 ```
 
 ![](README_files/figure-html/unnamed-chunk-6-1.png) 
+
+
+
+```r
+# Robertson chemical kinetics problem
+Robertson = '
+dxdt[0] = -alpha * x[0] + beta * x[1] * x[2];
+dxdt[1] = alpha * x[0] - beta * x[1] * x[2] - gamma * x[1] * x[1];
+dxdt[2] = gamma * x[1] * x[1];
+' # Robertson
+pars = c(alpha = 0.04, beta = 1e4, gamma = 3e7)
+init.cond = c(1, 0, 0)
+cat(JacobianCpp(Robertson))
+```
+
+```
+## J(0, 0) = -alpha;
+## J(0, 1) = beta * x[2];
+## J(0, 2) = beta * x[1];
+## J(1, 0) = alpha;
+## J(1, 1) = -(beta * x[2] + (gamma * x[1] + gamma * x[1]));
+## J(1, 2) = -(beta * x[1]);
+## J(2, 0) = 0;
+## J(2, 1) = gamma * x[1] + gamma * x[1];
+## J(2, 2) = 0;
+## dfdt[0] = 0.0;
+## dfdt[1] = 0.0;
+## dfdt[2] = 0.0;
+```
+
+```r
+compile_implicit("robertson", Robertson, pars, TRUE)
+at = 10 ^ seq(-5, 5, len = 400)
+x = robertson_at(init.cond, at)
+par(mfrow = c(3, 1), mar = rep(0.5, 4), oma = rep(5, 4), xpd = NA)
+plot(x[, 1:2], type = "l", lwd = 3,
+     col = "steelblue", log = "x", axes = F, xlab = NA)
+axis(2); box()
+plot(x[, c(1, 3)], type = "l", lwd = 3,
+     col = "steelblue", log = "x", axes = F, xlab = NA)
+axis(4); box()
+plot(x[, c(1, 4)], type = "l", lwd = 3,
+     col = "steelblue", log = "x", axes = F)
+axis(2); axis(1); box()
+```
+
+![](README_files/figure-html/unnamed-chunk-7-1.png) 
 
 ### Performance
 
