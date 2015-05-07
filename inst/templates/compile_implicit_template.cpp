@@ -16,12 +16,12 @@ __HEADERS__;
 
 namespace odeintr
 {
-  using stiff_vec = ublas::vector<double>;
-  using stiff_mat = ublas::matrix<double>;
+  using sys_vec = ublas::vector<double>;
+  using sys_mat = ublas::matrix<double>;
 
   static const std::size_t N = __SYS_SIZE__;
   
-  using state_type = stiff_vec;
+  using state_type = sys_vec;
   
   static state_type state(N);
   
@@ -40,7 +40,7 @@ namespace odeintr
   
   struct stiff_system
   {
-      void operator()(const stiff_vec &x, stiff_vec &dxdt , double t)
+      void operator()(const sys_vec &x, sys_vec &dxdt , double t)
       {
         __SYS__;
       }
@@ -48,8 +48,8 @@ namespace odeintr
   
   struct stiff_system_jacobi
   {
-      void operator()(const stiff_vec &x, stiff_mat &J,
-                      const double t, stiff_vec &dfdt)
+      void operator()(const sys_vec &x, sys_mat &J,
+                      const double t, sys_vec &dfdt)
       {
         __JACOBIAN__;
       }

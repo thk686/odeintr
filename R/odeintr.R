@@ -331,15 +331,20 @@ compile_sys = function(name, sys,
   code = sub("__HEADERS__", headers, code)
   code = sub("__FOOTERS__", footers, code)
   code = gsub("__FUNCNAME__", name, code)
-  if (compile &&
-      !inherits(try(Rcpp::sourceCpp(code = code, env = env, ...)), "try-error"))
+  if (compile)
   {
-    if (!is.null(observer))
+    res = try(Rcpp::sourceCpp(code = code, env = env, ...))
+    if (!inherits(res, "try-error"))
     {
-      try(do.call(paste0(name, "_set_observer"), list(f = observer)))
-      try(do.call(paste0(name, "_set_output_processor"), list(f = proc_output)))
+      if (!is.null(observer))
+      {
+        try(do.call(paste0(name, "_set_observer"), list(f = observer)))
+        try(do.call(paste0(name, "_set_output_processor"), list(f = proc_output)))
+      }
+      if (name %in% search())
+        detach(pos = match(name, search()))
+      attach(env, name = name)
     }
-    attach(env)
   }
   return(invisible(code))
 }
@@ -419,9 +424,12 @@ compile_sys = function(name, sys,
 #' at = 10 ^ seq(-5, 5, len = 400)
 #' x = robertson_at(init.cond, at)
 #' par(mfrow = c(3, 1), mar = rep(0.5, 4), oma = rep(5, 4), xpd = NA)
-#' plot(x[, 1:2], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA); axis(2); box()
-#' plot(x[, c(1, 3)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA); axis(4); box()
-#' plot(x[, c(1, 4)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F); axis(2); axis(1); box()
+#' plot(x[, 1:2], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA)
+#' axis(2); box()
+#' plot(x[, c(1, 3)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA)
+#' axis(4); box()
+#' plot(x[, c(1, 4)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F)
+#' axis(2); axis(1); box()
 #' }
 #' @rdname implicit
 #' @export
@@ -456,7 +464,7 @@ compile_implicit = function(name, sys,
     sys = vectorize_1d_sys(sys)
     sys_dim = 1L
   }
-  code = read_template("compile_stiff_sys_template")
+  code = read_template("compile_implicit_template")
   code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
   code = sub("__ATOL__", as.character(atol), code)
   code = sub("__RTOL__", as.character(rtol), code)
@@ -466,9 +474,16 @@ compile_implicit = function(name, sys,
   code = sub("__HEADERS__", headers, code)
   code = sub("__FOOTERS__", footers, code)
   code = gsub("__FUNCNAME__", name, code)
-  if (compile &&
-        !inherits(try(Rcpp::sourceCpp(code = code, env = env, ...)), "try-error"))
-    attach(env)
+  if (compile)
+  {
+    res = try(Rcpp::sourceCpp(code = code, env = env, ...))
+    if (!inherits(res, "try-error"))
+    {
+      if (name %in% search())
+        detach(pos = match(name, search()))
+      attach(env, name = name)
+    }
+  }
   return(invisible(code))
 }
 
@@ -497,6 +512,7 @@ JacobianCpp = function(sys, sys_dim = -1L)
 #' @param level the compiler optimization level (-O<level>)
 #' @param omit.debug if true, remove "-g" from flags
 #' @param disable.asserts if true, set NDEBUG define
+#' @param suppress.warnings if true, suppress compiler warnings
 #' @param overwrite if true, overwrite existing Makevars file
 #' 
 #' @details This function will change the optimization flags used
@@ -527,6 +543,7 @@ JacobianCpp = function(sys, sys_dim = -1L)
 set_optimization = function(level = 3,
                             omit.debug = FALSE,
                             disable.asserts = FALSE,
+                            suppress.warnings = FALSE,
                             overwrite = FALSE)
 {
   user_dir = file.path(Sys.getenv("HOME"), ".R")
