@@ -343,7 +343,7 @@ compile_sys = function(name, sys,
       }
       if (name %in% search())
         detach(pos = match(name, search()))
-      attach(env, name = name)
+      do.call("attach", list(what = env, name = name))
     }
   }
   return(invisible(code))
@@ -481,7 +481,7 @@ compile_implicit = function(name, sys,
     {
       if (name %in% search())
         detach(pos = match(name, search()))
-      attach(env, name = name)
+      do.call("attach", list(what = env, name = name))
     }
   }
   return(invisible(code))
