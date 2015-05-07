@@ -424,11 +424,14 @@ compile_sys = function(name, sys,
 #' at = 10 ^ seq(-5, 5, len = 400)
 #' x = robertson_at(init.cond, at)
 #' par(mfrow = c(3, 1), mar = rep(0.5, 4), oma = rep(5, 4), xpd = NA)
-#' plot(x[, 1:2], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA)
+#' plot(x[, 1:2], type = "l", lwd = 3,
+#'      col = "steelblue", log = "x", axes = F, xlab = NA)
 #' axis(2); box()
-#' plot(x[, c(1, 3)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F, xlab = NA)
+#' plot(x[, c(1, 3)], type = "l", lwd = 3,
+#'      col = "steelblue", log = "x", axes = F, xlab = NA)
 #' axis(4); box()
-#' plot(x[, c(1, 4)], type = "l", lwd = 3, col = "steelblue", log = "x", axes = F)
+#' plot(x[, c(1, 4)], type = "l", lwd = 3,
+#'      col = "steelblue", log = "x", axes = F)
 #' axis(2); axis(1); box()
 #' }
 #' @rdname implicit
