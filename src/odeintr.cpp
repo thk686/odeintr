@@ -6,7 +6,6 @@ static std::vector<List> rec_x;
 static std::vector<double> rec_t;
 
 using stepper_type = odeint::runge_kutta_dopri5<state_type>;
-auto stepper = odeint::make_dense_output(1e-6, 1e-6, stepper_type());
 
 struct Sys
 {
@@ -46,11 +45,12 @@ init_obs(int sz)
 
 // [[Rcpp::export]]
 List integrate_sys_const(Function derivs, Function recfun, state_type init,
-                         double duration, double step_size = 1.0,
-                         double start = 0.0)
+                         double duration, double step_size = 1.0, double start = 0.0,
+                         double atol = 1e-6, double rtol = 1e-6)
 {
   Sys s(derivs); Obs o(recfun);
   init_obs(duration / step_size);
+  auto stepper = odeint::make_dense_output(atol, rtol, stepper_type());
   odeint::integrate_const(stepper, s, init, start, start + duration, step_size, o);
   List out; out("t") = rec_t; out("x") = rec_x;
   return out;
@@ -58,11 +58,12 @@ List integrate_sys_const(Function derivs, Function recfun, state_type init,
 
 // [[Rcpp::export]]
 List integrate_sys_adapt(Function derivs, Function recfun, state_type init,
-                         double duration, double step_size = 1.0,
-                         double start = 0.0)
+                         double duration, double step_size = 1.0, double start = 0.0,
+                         double atol = 1e-6, double rtol = 1e-6)
 {
   Sys s(derivs); Obs o(recfun);
   init_obs(duration / step_size);
+  auto stepper = odeint::make_dense_output(atol, rtol, stepper_type());
   odeint::integrate_adaptive(stepper, s, init, start, start + duration, step_size, o);
   List out; out("t") = rec_t; out("x") = rec_x;
   return out;

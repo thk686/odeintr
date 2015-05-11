@@ -48,6 +48,8 @@ NULL
 #' @param start the starting time
 #' @param adaptive_obs if true, call observer after each adaptive step
 #' @param observer a function with signature function(x, t) returning values to store in output
+#' @param atol absolute error tolerance
+#' @param rtol relative error tolerance
 #' 
 #' @details The system will be integrated from \code{start} to \code{start + duration}. The method
 #' is an error controlled 5th-order Dormand-Prince. The time step will be adjusted to within error
@@ -96,12 +98,13 @@ NULL
 integrate_sys = function(sys, init, duration,
                          step_size = 1, start = 0,
                          adaptive_obs = FALSE,
-                         observer = function(x, t) x)
+                         observer = function(x, t) x,
+                         atol = 1e-6, rtol = 1e-6)
 {
   res = if (adaptive_obs)
-    integrate_sys_adapt(sys, observer, init, duration, step_size, start)
+    integrate_sys_adapt(sys, observer, init, duration, step_size, start, atol, rtol)
   else
-    integrate_sys_const(sys, observer, init, duration, step_size, start)
+    integrate_sys_const(sys, observer, init, duration, step_size, start, atol, rtol)
   proc_output(res)
 }
 
