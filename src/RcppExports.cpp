@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // integrate_sys_const
-List integrate_sys_const(Function derivs, Function recfun, state_type init, double duration, double step_size, double start);
-RcppExport SEXP odeintr_integrate_sys_const(SEXP derivsSEXP, SEXP recfunSEXP, SEXP initSEXP, SEXP durationSEXP, SEXP step_sizeSEXP, SEXP startSEXP) {
+List integrate_sys_const(Function derivs, Function recfun, state_type init, double duration, double step_size, double start, double atol, double rtol);
+RcppExport SEXP odeintr_integrate_sys_const(SEXP derivsSEXP, SEXP recfunSEXP, SEXP initSEXP, SEXP durationSEXP, SEXP step_sizeSEXP, SEXP startSEXP, SEXP atolSEXP, SEXP rtolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -18,13 +18,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type duration(durationSEXP);
     Rcpp::traits::input_parameter< double >::type step_size(step_sizeSEXP);
     Rcpp::traits::input_parameter< double >::type start(startSEXP);
-    __result = Rcpp::wrap(integrate_sys_const(derivs, recfun, init, duration, step_size, start));
+    Rcpp::traits::input_parameter< double >::type atol(atolSEXP);
+    Rcpp::traits::input_parameter< double >::type rtol(rtolSEXP);
+    __result = Rcpp::wrap(integrate_sys_const(derivs, recfun, init, duration, step_size, start, atol, rtol));
     return __result;
 END_RCPP
 }
 // integrate_sys_adapt
-List integrate_sys_adapt(Function derivs, Function recfun, state_type init, double duration, double step_size, double start);
-RcppExport SEXP odeintr_integrate_sys_adapt(SEXP derivsSEXP, SEXP recfunSEXP, SEXP initSEXP, SEXP durationSEXP, SEXP step_sizeSEXP, SEXP startSEXP) {
+List integrate_sys_adapt(Function derivs, Function recfun, state_type init, double duration, double step_size, double start, double atol, double rtol);
+RcppExport SEXP odeintr_integrate_sys_adapt(SEXP derivsSEXP, SEXP recfunSEXP, SEXP initSEXP, SEXP durationSEXP, SEXP step_sizeSEXP, SEXP startSEXP, SEXP atolSEXP, SEXP rtolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -34,7 +36,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type duration(durationSEXP);
     Rcpp::traits::input_parameter< double >::type step_size(step_sizeSEXP);
     Rcpp::traits::input_parameter< double >::type start(startSEXP);
-    __result = Rcpp::wrap(integrate_sys_adapt(derivs, recfun, init, duration, step_size, start));
+    Rcpp::traits::input_parameter< double >::type atol(atolSEXP);
+    Rcpp::traits::input_parameter< double >::type rtol(rtolSEXP);
+    __result = Rcpp::wrap(integrate_sys_adapt(derivs, recfun, init, duration, step_size, start, atol, rtol));
     return __result;
 END_RCPP
 }

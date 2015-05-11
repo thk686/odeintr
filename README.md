@@ -3,7 +3,9 @@ Timothy H. Keitt
 04/17/2015  
 
 The odeintr is package for integrating differential equations in R. The integration engine is
-the [Boost ODEINT package](http://www.odeint.com). Some features:
+the [Boost odeint package](http://www.odeint.com).
+
+### Features
 
 1. Simple specification of the ODE system
 1. Intelligent defaults, easily overridden, used throughout
@@ -16,6 +18,12 @@ the [Boost ODEINT package](http://www.odeint.com). Some features:
 1. Can compile an implicit solver with symbolic evaluation of the Jacobian
 1. You can easily save and edit the generated C++ code
 
+### Installation
+
+```
+devtools::install_github("thk686/odeintr")
+```
+
 ### Examples
 
 
@@ -27,7 +35,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.108   0.011   0.135
+##   0.116   0.004   0.121
 ```
 
 ```r
@@ -43,7 +51,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##       0       0       0
+##   0.000   0.000   0.001
 ```
 
 ```r
@@ -62,7 +70,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.237   0.006   0.242
+##   0.207   0.020   0.237
 ```
 
 ```r
@@ -91,7 +99,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.012   0.000   0.012
+##   0.006   0.008   0.014
 ```
 
 ```r
@@ -112,7 +120,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.002
+##   0.000   0.004   0.002
 ```
 
 ```r
@@ -238,7 +246,7 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 1. ~~Add additional integration methods from odeint~~
 1. ~~Extend customized observer to compiled code~~
 1. ~~Allow user to set error tolerances in compiled code~~
-1. Allow user to set error tolerances for system defined in R (if possible)
+1. ~~Allow user to set error tolerances for system defined in R~~
 1. ~~Expose implicit solver methods~~
 1. ~~Compute Jacobian symbolically~~
 1. ~~Convenient dynamic parameter settings~~
@@ -246,8 +254,3 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 
 Pull requests are welcome.
 
-### Installation
-
-```
-devtools::install_github("thk686/odeintr")
-```

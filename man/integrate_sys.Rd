@@ -5,7 +5,8 @@
 \title{Integrate an ODE system using ODEINT}
 \usage{
 integrate_sys(sys, init, duration, step_size = 1, start = 0,
-  adaptive_obs = FALSE, observer = function(x, t) x)
+  adaptive_obs = FALSE, observer = function(x, t) x, atol = 1e-06,
+  rtol = 1e-06)
 }
 \arguments{
 \item{sys}{a function with signature function(x, t)}
@@ -21,6 +22,10 @@ integrate_sys(sys, init, duration, step_size = 1, start = 0,
 \item{adaptive_obs}{if true, call observer after each adaptive step}
 
 \item{observer}{a function with signature function(x, t) returning values to store in output}
+
+\item{atol}{absolute error tolerance}
+
+\item{rtol}{relative error tolerance}
 }
 \value{
 A data frame, \code{NULL} if no samples were recorded and a very complicated
