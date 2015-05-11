@@ -8,7 +8,9 @@ output:
 ---
 
 The odeintr is package for integrating differential equations in R. The integration engine is
-the [Boost ODEINT package](http://www.odeint.com). Some features:
+the [Boost odeint package](http://www.odeint.com).
+
+### Features
 
 1. Simple specification of the ODE system
 1. Intelligent defaults, easily overridden, used throughout
@@ -20,6 +22,12 @@ the [Boost ODEINT package](http://www.odeint.com). Some features:
 1. Ability to alter system state and restart simulations where you left off
 1. Can compile an implicit solver with symbolic evaluation of the Jacobian
 1. You can easily save and edit the generated C++ code
+
+### Installation
+
+```
+devtools::install_github("thk686/odeintr")
+```
 
 ### Examples
 
@@ -142,7 +150,7 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 1. ~~Add additional integration methods from odeint~~
 1. ~~Extend customized observer to compiled code~~
 1. ~~Allow user to set error tolerances in compiled code~~
-1. Allow user to set error tolerances for system defined in R (if possible)
+1. ~~Allow user to set error tolerances for system defined in R~~
 1. ~~Expose implicit solver methods~~
 1. ~~Compute Jacobian symbolically~~
 1. ~~Convenient dynamic parameter settings~~
@@ -150,8 +158,3 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 
 Pull requests are welcome.
 
-### Installation
-
-```
-devtools::install_github("thk686/odeintr")
-```
