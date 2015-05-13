@@ -14,16 +14,20 @@ namespace odeintr
 {
   static const std::size_t N = __SYS_SIZE__;
   
-  using state_type = std::array<double, N>;
+//  using state_type = std::array<double, N>;
+  typedef std::array<double, N> state_type;
   
   static state_type state;
   
-  using stepper_type = odeint::__STEPPER_TYPE__;
+//  using stepper_type = odeint::__STEPPER_TYPE__;
+  typedef odeint::__STEPPER_TYPE__ stepper_type;
   
   static auto stepper = __STEPPER_CONSTRUCT__;
   
-  using vec_type = Rcpp::List;
-  using rec_type = std::vector<vec_type>;
+//  using vec_type = Rcpp::List;
+//  using rec_type = std::vector<vec_type>;
+  typedef Rcpp::List vec_type;
+  typedef std::vector<vec_type> rec_type;
   static rec_type rec_x;
   static std::vector<double> rec_t;
   

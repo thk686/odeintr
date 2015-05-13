@@ -16,23 +16,28 @@ __HEADERS__;
 
 namespace odeintr
 {
-  using sys_vec = ublas::vector<double>;
-  using sys_mat = ublas::matrix<double>;
+//  using sys_vec = ublas::vector<double>;
+//  using sys_mat = ublas::matrix<double>;
+  typedef ublas::vector<double> sys_vec;
+  typedef ublas::matrix<double> sys_mat;
 
   static const std::size_t N = __SYS_SIZE__;
   
-  using state_type = sys_vec;
+//  using state_type = sys_vec;
+  typedef sys_vec state_type;
   
   static state_type state(N);
   
-  using stepper_type = odeint::rosenbrock4<double>;
+//  using stepper_type = odeint::rosenbrock4<double>;
+  typedef odeint::rosenbrock4<double> stepper_type;
   
   static const double atol = __ATOL__,
                       rtol = __RTOL__;
   
   static auto stepper = odeint::make_dense_output<stepper_type>(atol, rtol);
   
-  using vec_type = std::vector<double>;
+//  using vec_type = std::vector<double>;
+  typedef std::vector<double> vec_type;
   static std::array<vec_type, N> rec_x;
   static vec_type rec_t;
   

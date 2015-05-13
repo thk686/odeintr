@@ -10,6 +10,7 @@ using namespace Rcpp;
 
 namespace odeint = boost::numeric::odeint;
 
-using state_type = std::vector<double>;
+// using state_type = std::vector<double>;
+typedef std::vector<double> state_type;
 
 #endif // __ODEINTR_H__
