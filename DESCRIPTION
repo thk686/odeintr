@@ -7,9 +7,9 @@ Author: Timothy H. Keitt
 Maintainer: Timothy H. Keitt <tkeitt@gmail.com>
 Description: Wraps the Boost odeint library for integration of differential equations.
 URL: https://github.com/thk686/odeintr
-URL: http://www.boost.org/doc/libs/release/libs/numeric/odeint/
-URL: http://www.keittlab.org/
+BugReports: https://github.com/thk686/odeintr/issues
 License: GPL (>= 2)
 Imports: Rcpp (>= 0.10.0)
 LinkingTo: Rcpp, BH
-
+Suggests: knitr
+VignetteBuilder: knitr
