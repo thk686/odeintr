@@ -5,7 +5,8 @@
 static std::vector<List> rec_x;
 static std::vector<double> rec_t;
 
-using stepper_type = odeint::runge_kutta_dopri5<state_type>;
+// using stepper_type = odeint::runge_kutta_dopri5<state_type>;
+typedef odeint::runge_kutta_dopri5<state_type> stepper_type;
 
 struct Sys
 {
