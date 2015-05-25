@@ -11,7 +11,7 @@ before_install:
 
 install:
   - ./pkg-build.sh install_r BH
-  - ./pkg-build.sh install_deps install_r BH
+  - ./pkg-build.sh install_deps
 
 ## script:
 ##   - ./pkg-build.sh run_tests
