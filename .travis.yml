@@ -10,6 +10,7 @@ before_install:
   - ./pkg-build.sh bootstrap
 
 install:
+  - ./pkg-build.sh install_r BH
   - ./pkg-build.sh install_deps install_r BH
 
 ## script:
