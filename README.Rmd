@@ -26,7 +26,8 @@ the [Boost odeint package](http://www.odeint.com).
 ### Installation
 
 ```
-devtools::install_github("thk686/odeintr")
+install.packages(odeintr)                   # released
+devtools::install_github("thk686/odeintr")  # development
 ```
 
 ### Examples
