@@ -1,7 +1,7 @@
 ---
 title: "odeintr"
 author: "Timothy H. Keitt"
-date: "04/17/2015"
+date: "09/22/2015"
 output:
   html_document:
     keep_md: yes
