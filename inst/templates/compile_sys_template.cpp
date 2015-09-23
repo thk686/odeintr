@@ -15,7 +15,7 @@ namespace odeintr
   static const std::size_t N = __SYS_SIZE__;
   
 //  using state_type = std::array<double, N>;
-  typedef std::array<double> state_type;
+  typedef std::array<double, N> state_type;
   
   static state_type state;
   
