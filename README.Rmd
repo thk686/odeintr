@@ -7,7 +7,7 @@ output:
     keep_md: yes
 ---
 
-[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr)
+[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) [![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html)
 
 The odeintr is package for integrating differential equations in R. The integration engine is
 the [Boost odeint package](http://www.odeint.com).
@@ -31,6 +31,8 @@ the [Boost odeint package](http://www.odeint.com).
 install.packages(odeintr)                   # released
 devtools::install_github("thk686/odeintr")  # development
 ```
+
+Note that you may need to install g++ >= 4.8 as some of the Boost libraries do not appear to work with earlier versions of g++. Have a look [here](https://cran.r-project.org/bin/windows/Rtools/) for information on the status of the R Windows toolchain. Clang on OSX appears to work fine (but with lots warnings related to Boost).
 
 ### Examples
 

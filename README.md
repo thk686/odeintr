@@ -1,8 +1,8 @@
 # odeintr
 Timothy H. Keitt  
-04/17/2015  
+09/22/2015  
 
-[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr)
+[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) [![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html)
 
 The odeintr is package for integrating differential equations in R. The integration engine is
 the [Boost odeint package](http://www.odeint.com).
@@ -27,6 +27,8 @@ install.packages(odeintr)                   # released
 devtools::install_github("thk686/odeintr")  # development
 ```
 
+Note that you may need to install g++ >= 4.8 as some of the Boost libraries do not appear to work with earlier versions of g++. Have a look [here](https://cran.r-project.org/bin/windows/Rtools/) for information on the status of the R Windows toolchain. Clang on OSX appears to work fine (but with lots warnings related to Boost).
+
 ### Examples
 
 
@@ -38,7 +40,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.107   0.008   0.120
+##   0.110   0.008   0.121
 ```
 
 ```r
@@ -54,7 +56,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.001
+##       0       0       0
 ```
 
 ```r
@@ -73,7 +75,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.219   0.004   0.259
+##   0.183   0.003   0.197
 ```
 
 ```r
@@ -102,7 +104,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.009   0.004   0.013
+##   0.011   0.003   0.013
 ```
 
 ```r
@@ -123,7 +125,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.001
+##   0.001   0.000   0.002
 ```
 
 ```r
