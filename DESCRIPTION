@@ -1,7 +1,7 @@
 Package: odeintr
 Type: Package
 Title: C++ ODE Solvers Compiled on-Demand
-Version: 1.4
+Version: 1.5
 Date: 2015-05-07
 Author: Timothy H. Keitt
 Maintainer: Timothy H. Keitt <tkeitt@gmail.com>
@@ -10,6 +10,6 @@ URL: https://github.com/thk686/odeintr
 BugReports: https://github.com/thk686/odeintr/issues
 License: GPL (>= 2)
 Imports: Rcpp (>= 0.10.0)
-LinkingTo: Rcpp, BH
+LinkingTo: Rcpp
 Suggests: knitr
 VignetteBuilder: knitr

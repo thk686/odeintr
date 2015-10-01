@@ -1,6 +1,6 @@
 // Copyright Timothy H. Keitt 2015
 
-#include "../inst/include/odeintr.h"
+#include "odeintr.h"
 
 static std::vector<List> rec_x;
 static std::vector<double> rec_t;
