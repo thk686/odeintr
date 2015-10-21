@@ -15,9 +15,13 @@ namespace odeintr
   static const std::size_t N = __SYS_SIZE__;
   
 //  using state_type = std::array<double, N>;
-  typedef std::array<double, N> state_type;
+//  std::array is heap allocated; you cannot
+//  exceed the built in size limits
+//  typedef std::array<double, N> state_type;
+
+  typedef std::vector<double> state_type;
   
-  static state_type state;
+  static state_type state(N);
   
 //  using stepper_type = odeint::__STEPPER_TYPE__;
   typedef odeint::__STEPPER_TYPE__ stepper_type;
@@ -84,7 +88,8 @@ void __FUNCNAME___set_state(Rcpp::NumericVector new_state)
 std::vector<double>
 __FUNCNAME___get_state()
 {
-  return std::vector<double>(odeintr::state.begin(), odeintr::state.end());
+  // return std::vector<double>(odeintr::state.begin(), odeintr::state.end());
+  return odeintr::state;
 }
 
 // [[Rcpp::export]]
