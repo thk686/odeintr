@@ -15,6 +15,7 @@ the [Boost odeint package](http://www.odeint.com).
 ### Features
 
 1. Simple specification of the ODE system
+1. Named, dynamic run-time setable system parameters
 1. Intelligent defaults, easily overridden, used throughout
 1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
