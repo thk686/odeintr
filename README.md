@@ -10,6 +10,7 @@ the [Boost odeint package](http://www.odeint.com).
 ### Features
 
 1. Simple specification of the ODE system
+1. Named, dynamic run-time setable system parameters
 1. Intelligent defaults, easily overridden, used throughout
 1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
@@ -40,7 +41,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.110   0.008   0.121
+##   0.110   0.007   0.116
 ```
 
 ```r
@@ -56,7 +57,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##       0       0       0
+##   0.001   0.000   0.000
 ```
 
 ```r
@@ -75,7 +76,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.183   0.003   0.197
+##   0.168   0.007   0.175
 ```
 
 ```r
@@ -104,7 +105,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.011   0.003   0.013
+##   0.021   0.002   0.024
 ```
 
 ```r
@@ -125,7 +126,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.002
+##   0.003   0.000   0.003
 ```
 
 ```r
