@@ -1,6 +1,6 @@
 # odeintr
 Timothy H. Keitt  
-09/22/2015  
+`r format(Sys.time(), '%d %B, %Y')`  
 
 [![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) [![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html)
 
@@ -14,7 +14,7 @@ the [Boost odeint package](http://www.odeint.com).
 1. Intelligent defaults, easily overridden, used throughout
 1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
-1. Simple openmpi vectorization of large systems
+1. Simple openmp vectorization of large systems
 1. Results returned as a simple data frame ready for analysis and plotting
 1. Ability to specify a custom observer in R that can return arbitrary data
 1. Three options for calling the observer: at regular intervals, after each update step or at specified times
@@ -44,7 +44,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.073   0.027   0.107
+##   0.114   0.004   0.118
 ```
 
 ```r
@@ -60,7 +60,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.000   0.000   0.001
+##   0.001   0.000   0.001
 ```
 
 ```r
@@ -79,7 +79,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.266   0.025   0.336
+##   0.203   0.000   0.204
 ```
 
 ```r
@@ -108,7 +108,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.026   0.000   0.030
+##    0.02    0.00    0.02
 ```
 
 ```r
@@ -129,7 +129,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.004   0.000   0.004
+##   0.002   0.000   0.002
 ```
 
 ```r
@@ -245,7 +245,7 @@ axis(2); axis(1); box()
 
 
 ```r
-# reaction-diffusion model with openmpi
+# reaction-diffusion model with openmp
 M = 200
 bistable = '
 laplace4(x, dxdt, D);  // parallel 4-point discrete laplacian
@@ -255,7 +255,7 @@ for (int i = 0; i < N; ++i)
 ' # bistable
 compile_sys_openmp("bistable", bistable, sys_dim = M * M,
                    pars = c(D = 0.1, a = 1.0, b = 1/2),
-                   const = TRUE)
+                   const = TRUE, method = "abm4")
 at = 10 ^ (0:3)
 inic = rbinom(M * M, 1, 1/2)
 system.time({x = bistable_at(inic, at)})
@@ -263,7 +263,7 @@ system.time({x = bistable_at(inic, at)})
 
 ```
 ##    user  system elapsed 
-## 104.536   2.674  97.285
+## 212.036  10.777  57.560
 ```
 
 ```r
