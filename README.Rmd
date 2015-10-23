@@ -1,7 +1,7 @@
 ---
 title: "odeintr"
 author: "Timothy H. Keitt"
-date: "09/22/2015"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     keep_md: yes
@@ -19,7 +19,7 @@ the [Boost odeint package](http://www.odeint.com).
 1. Intelligent defaults, easily overridden, used throughout
 1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
-1. Simple openmpi vectorization of large systems
+1. Simple openmp vectorization of large systems
 1. Results returned as a simple data frame ready for analysis and plotting
 1. Ability to specify a custom observer in R that can return arbitrary data
 1. Three options for calling the observer: at regular intervals, after each update step or at specified times
@@ -148,7 +148,7 @@ axis(2); axis(1); box()
 ```
 
 ```{r, fig.width = 5, fig.height = 5}
-# reaction-diffusion model with openmpi
+# reaction-diffusion model with openmp
 M = 200
 bistable = '
 laplace4(x, dxdt, D);  // parallel 4-point discrete laplacian
@@ -158,7 +158,7 @@ for (int i = 0; i < N; ++i)
 ' # bistable
 compile_sys_openmp("bistable", bistable, sys_dim = M * M,
                    pars = c(D = 0.1, a = 1.0, b = 1/2),
-                   const = TRUE)
+                   const = TRUE, method = "abm4")
 at = 10 ^ (0:3)
 inic = rbinom(M * M, 1, 1/2)
 system.time({x = bistable_at(inic, at)})
