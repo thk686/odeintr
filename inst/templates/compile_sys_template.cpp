@@ -4,7 +4,7 @@
 #include <Rcpp.h>
 // [[Rcpp::plugins(cpp11)]]
 
-// [[Rcpp::depends(BH)]]
+// [[Rcpp::depends(odeintr)]]
 #include "boost/numeric/odeint.hpp"
 namespace odeint = boost::numeric::odeint;
 
@@ -14,24 +14,16 @@ namespace odeintr
 {
   static const std::size_t N = __SYS_SIZE__;
 
-// Some compilers do not support using
-//  using state_type = std::array<double, N>;
-//  typedef std::array<double, N> state_type;
-// std::array is allocated on the stack
-// its maximum size is compiler/os dependent
-
   typedef std::vector<double> state_type;
   
   static state_type state(N);
   
-//  using stepper_type = odeint::__STEPPER_TYPE__;
   typedef odeint::__STEPPER_TYPE__ stepper_type;
   
   static auto stepper = __STEPPER_CONSTRUCT__;
   
-//  using vec_type = std::vector<double>;
   typedef std::vector<double> vec_type;
-  static std::array<vec_type, N> rec_x;
+  static std::vector<vec_type> rec_x(N);
   static vec_type rec_t;
   
   __GLOBALS__;
@@ -90,8 +82,7 @@ void __FUNCNAME___set_state(Rcpp::NumericVector new_state)
 std::vector<double>
 __FUNCNAME___get_state()
 {
-  // return std::vector<double>(odeintr::state.begin(), odeintr::state.end());
-  return odeintr::state; // This will copy
+  return odeintr::state;
 }
 
 // [[Rcpp::export]]

@@ -14,6 +14,7 @@ the [Boost odeint package](http://www.odeint.com).
 1. Intelligent defaults, easily overridden, used throughout
 1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
+1. Simple openmpi vectorization of large systems
 1. Results returned as a simple data frame ready for analysis and plotting
 1. Ability to specify a custom observer in R that can return arbitrary data
 1. Three options for calling the observer: at regular intervals, after each update step or at specified times
@@ -28,7 +29,9 @@ install.packages(odeintr)                   # released
 devtools::install_github("thk686/odeintr")  # development
 ```
 
-Note that you may need to install g++ >= 4.8 as some of the Boost libraries do not appear to work with earlier versions of g++. Have a look [here](https://cran.r-project.org/bin/windows/Rtools/) for information on the status of the R Windows toolchain. Clang on OSX appears to work fine (but with lots warnings related to Boost).
+There have been some problems compiling on Windows owing to an incompatibility between
+the `BH` package and `RTools` toolchain. I have removed the dependency on the `BH`
+package. If you have trouble with Windows, please try the development version.
 
 ### Examples
 
@@ -41,7 +44,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.110   0.007   0.116
+##   0.073   0.027   0.107
 ```
 
 ```r
@@ -57,7 +60,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.000
+##   0.000   0.000   0.001
 ```
 
 ```r
@@ -76,7 +79,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.168   0.007   0.175
+##   0.266   0.025   0.336
 ```
 
 ```r
@@ -105,7 +108,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.021   0.002   0.024
+##   0.026   0.000   0.030
 ```
 
 ```r
@@ -126,7 +129,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.003   0.000   0.003
+##   0.004   0.000   0.004
 ```
 
 ```r
@@ -240,6 +243,40 @@ axis(2); axis(1); box()
 
 ![](README_files/figure-html/unnamed-chunk-7-1.png) 
 
+
+```r
+# reaction-diffusion model with openmpi
+M = 200
+bistable = '
+laplace4(x, dxdt, D);  // parallel 4-point discrete laplacian
+#pragma omp parallel for
+for (int i = 0; i < N; ++i)
+  dxdt[i] += a * x[i] * (1 - x[i]) * (x[i] - b);
+' # bistable
+compile_sys_openmp("bistable", bistable, sys_dim = M * M,
+                   pars = c(D = 0.1, a = 1.0, b = 1/2),
+                   const = TRUE)
+at = 10 ^ (0:3)
+inic = rbinom(M * M, 1, 1/2)
+system.time({x = bistable_at(inic, at)})
+```
+
+```
+##    user  system elapsed 
+## 104.536   2.674  97.285
+```
+
+```r
+par(mfrow = rep(2, 2), mar = rep(1, 4), oma = rep(1, 4))
+for (i in 1:4){
+  image(matrix(unlist(x[i, -1]), M, M),
+        asp = 1, col = c("black", "lightgray"),
+        axes = FALSE)
+  title(main=paste("Time =", x[i, 1]))}
+```
+
+![](README_files/figure-html/unnamed-chunk-8-1.png) 
+
 ### Performance
 
 Because ODEINT is a header-only library, the entire integration path is exposed to the compiler. That means your system functions can be inlined with the integration code, loops unrolled, etc. It will help if you enable optimization in your compiler. Use "-O3" with gcc. See the R documentation on the user Makevars file. (Odeintr now provides a convenient function to set the compiler
@@ -257,6 +294,7 @@ The Lorenz  and Van der Pol examples above show about 10 million observer calls 
 1. ~~Compute Jacobian symbolically~~
 1. ~~Convenient dynamic parameter settings~~
 1. ~~Install emitted function in a new environment~~
+1. Add more control of openmp threading
 
 Pull requests are welcome.
 

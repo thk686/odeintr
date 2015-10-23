@@ -352,6 +352,119 @@ compile_sys = function(name, sys,
   return(invisible(code))
 }
 
+#' Compile ODE system with openmp multi-threading
+#' 
+#' Generates an integrator using Rcpp and openmp
+#'
+#' @param name the name of the generated integration function
+#' @param sys a string containing C++ expressions
+#' @param pars a named vector of numbers or a vector of names or number of parameters
+#' @param const declare parameters const if true
+#' @param method a method string (see \code{\link{compile_sys}})
+#' @param sys_dim length of the state vector
+#' @param atol absolute tolerance if using adaptive step size
+#' @param rtol relative tolerance if using adaptive step size
+#' @param globals a string with global C++ declarations
+#' @param headers code to appear before the \code{odeintr} namespace
+#' @param footers code to appear after the \code{odeintr} namespace
+#' @param compile if false, just return the code
+#' @param env install functions into this environment
+#' @param ... passed to \code{\link{sourceCpp}}
+#' 
+#' @details This functions behaves identically to \code{\link{compile_sys}}
+#' execpt that it does not allow one to override the default observer. In
+#' order to take advantage of openmp multi-threading, you must insert
+#' openmp pragmas into your system definition. See the examples.
+#' 
+#' A special function \code{laplace4} is defined and can be called from
+#' your system definition. It will compute a discrete 4-point Laplacian
+#' for use in solving PDE via the method of lines. The function takes
+#' \code{x} as its first argument, \code{dxdt} as its second argument
+#' and the diffusion coefficient \code{D} as its third parameter. This
+#' function uses the default openmp scheduling.
+#' 
+#' @author Timothy H. Keitt
+#' 
+#' @seealso \code{\link{set_optimization}}, \code{\link{compile_sys}}
+#' 
+#' @examples
+#' \dontrun{
+#' M = 200
+#' bistable = '
+#'  laplace4(x, dxdt, D);  // parallel 4-point discrete laplacian
+#'  #pragma omp parallel for
+#'  for (int i = 0; i < N; ++i)
+#'    dxdt[i] += a * x[i] * (1 - x[i]) * (x[i] - b);
+#' ' # bistable
+#' compile_sys_openmp("bistable", bistable, sys_dim = M * M,
+#'                    pars = c(D = 0.1, a = 1.0, b = 1/2),
+#'                    const = TRUE)
+#' at = 10 ^ (0:3)
+#' inic = rbinom(M * M, 1, 1/2)
+#' system.time({x = bistable_at(inic, at)})
+#' par(mfrow = rep(2, 2), mar = rep(1, 4), oma = rep(1, 4))
+#' for (i in 1:4){
+#'   image(matrix(unlist(x[i, -1]), M, M),
+#'         asp = 1, col = c("black", "lightgray"),
+#'         axes = FALSE)
+#'   title(main=paste("Time =", x[i, 1]))}
+#' }
+#' 
+#' @export
+compile_sys_openmp = function(name, sys,
+                              pars = NULL,
+                              const = FALSE,
+                              method = "rk5_i",
+                              sys_dim = -1L,
+                              atol = 1e-6,
+                              rtol = 1e-6,
+                              globals = "", 
+                              headers = "",
+                              footers = "",
+                              compile = TRUE,
+                              env = new.env(),
+                              ...)
+{
+  if (!is.null(pars))
+  {
+    pcode = handle_pars(pars, const)
+    globals = paste0(pcode$globals, globals, collapse = ";\n")
+    if (!is.null(pcode$getter))
+      footers = paste0(pcode$getter, footers, collapse = "\n")
+    if (!is.null(pcode$setter))
+      footers = paste0(pcode$setter, footers, collapse = "\n")
+  }
+  sys = paste0(sys, collapse = "; ")
+  stepper = make_stepper_type_openmp(method)
+  stepper_constr = make_stepper_constr(method, atol, rtol)
+  if (ceiling(sys_dim) < 1) sys_dim = get_sys_dim(sys)
+  if (is.na(sys_dim))
+  {
+    sys = vectorize_1d_sys(sys)
+    sys_dim = 1L
+  }
+  code = read_template("compile_sys_openmp_template")
+  code = gsub("__STEPPER_TYPE__", stepper, code)
+  code = gsub("__STEPPER_CONSTRUCT__", stepper_constr, code)
+  code = sub("__SYS_SIZE__", ceiling(sys_dim), code)
+  code = sub("__GLOBALS__", globals, code)
+  code = sub("__SYS__", sys, code)
+  code = sub("__HEADERS__", headers, code)
+  code = sub("__FOOTERS__", footers, code)
+  code = gsub("__FUNCNAME__", name, code)
+  if (compile)
+  {
+    res = try(Rcpp::sourceCpp(code = code, env = env, ...))
+    if (!inherits(res, "try-error"))
+    {
+      if (name %in% search())
+        detach(pos = match(name, search()))
+      do.call("attach", list(what = env, name = name))
+    }
+  }
+  return(invisible(code))
+}
+
 
 #' Compile Stiff ODE system solver
 #' 

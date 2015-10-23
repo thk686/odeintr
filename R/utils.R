@@ -13,7 +13,7 @@ read_template = function(name)
 
 vectorize_1d_sys = function(sys)
 {
-  if (grepl("\\[\\s*\\d+\\s*\\]", sys)) return(sys)
+  if (grepl("\\[\\.*\\]", sys)) return(sys)
   sys = gsub("\\bx\\b", "x[0]", sys)
   sys = gsub("\\bdxdt\\b", "dxdt[0]", sys)
   return(sys)
@@ -29,6 +29,12 @@ make_stepper_constr = function(method, atol, rtol)
   if (grepl("_i$", method))
     stepper_constr = paste0("odeint::make_dense_output(", atol, ", ", rtol, ", stepper_type())") 
   return(stepper_constr)
+}
+
+make_stepper_type_openmp = function(stepper)
+{
+  stepper = make_stepper_type(stepper)
+  sub(">", ", double, state_type, double, odeint::openmp_range_algebra>", stepper)
 }
 
 make_stepper_type = function(stepper)

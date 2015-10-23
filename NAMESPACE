@@ -3,6 +3,7 @@
 export(JacobianCpp)
 export(compile_implicit)
 export(compile_sys)
+export(compile_sys_openmp)
 export(integrate_sys)
 export(rm.Makevars)
 export(set_optimization)
