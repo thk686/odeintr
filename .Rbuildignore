@@ -1,8 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-README.Rmd
-README.html
-README_files
 ^\.travis\.yml$
-vignettes
-
+^README\.Rmd$
+^README\.html$
+^README_files.*\.png$
