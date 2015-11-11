@@ -44,7 +44,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.114   0.004   0.118
+##   0.104   0.000   0.104
 ```
 
 ```r
@@ -60,7 +60,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.001
+##   0.000   0.000   0.001
 ```
 
 ```r
@@ -79,7 +79,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.203   0.000   0.204
+##   0.184   0.000   0.182
 ```
 
 ```r
@@ -108,7 +108,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##    0.02    0.00    0.02
+##   0.012   0.004   0.019
 ```
 
 ```r
@@ -129,7 +129,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.002   0.000   0.002
+##   0.004   0.000   0.002
 ```
 
 ```r
@@ -246,16 +246,21 @@ axis(2); axis(1); box()
 
 ```r
 # reaction-diffusion model with openmp
+# M is defined as std::sqrt(N)
+# laplace2D is built into the template
+# Note that openmp can be slower
+# It requires tuning
 M = 200
 bistable = '
-laplace4(x, dxdt, D);  // parallel 4-point discrete laplacian
 #pragma omp parallel for
-for (int i = 0; i < N; ++i)
-  dxdt[i] += a * x[i] * (1 - x[i]) * (x[i] - b);
+for (int i = 0; i < M; ++i)
+  for (int j = 0; j < M; ++j)
+    dxdt[i * M + j] = D * laplace2D(x, i, j) +
+      a * x[i * M + j] * (1 - x[i * M + j]) * (x[i * M + j] - b);
 ' # bistable
 compile_sys_openmp("bistable", bistable, sys_dim = M * M,
                    pars = c(D = 0.1, a = 1.0, b = 1/2),
-                   const = TRUE, method = "abm4")
+                   const = TRUE)
 at = 10 ^ (0:3)
 inic = rbinom(M * M, 1, 1/2)
 system.time({x = bistable_at(inic, at)})
@@ -263,7 +268,7 @@ system.time({x = bistable_at(inic, at)})
 
 ```
 ##    user  system elapsed 
-## 212.036  10.777  57.560
+## 194.372   0.036  42.529
 ```
 
 ```r
