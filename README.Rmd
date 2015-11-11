@@ -149,16 +149,21 @@ axis(2); axis(1); box()
 
 ```{r, fig.width = 5, fig.height = 5}
 # reaction-diffusion model with openmp
+# M is defined as std::sqrt(N)
+# laplace2D is built into the template
+# Note that openmp can be slower
+# It requires tuning
 M = 200
 bistable = '
-laplace4(x, dxdt, D);  // parallel 4-point discrete laplacian
 #pragma omp parallel for
-for (int i = 0; i < N; ++i)
-  dxdt[i] += a * x[i] * (1 - x[i]) * (x[i] - b);
+for (int i = 0; i < M; ++i)
+  for (int j = 0; j < M; ++j)
+    dxdt[i * M + j] = D * laplace2D(x, i, j) +
+      a * x[i * M + j] * (1 - x[i * M + j]) * (x[i * M + j] - b);
 ' # bistable
 compile_sys_openmp("bistable", bistable, sys_dim = M * M,
                    pars = c(D = 0.1, a = 1.0, b = 1/2),
-                   const = TRUE, method = "abm4")
+                   const = TRUE)
 at = 10 ^ (0:3)
 inic = rbinom(M * M, 1, 1/2)
 system.time({x = bistable_at(inic, at)})
