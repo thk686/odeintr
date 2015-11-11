@@ -2,7 +2,7 @@ Package: odeintr
 Type: Package
 Title: C++ ODE Solvers Compiled on-Demand
 Version: 1.5
-Date: 2015-05-07
+Date: 2015-10-28
 Author: Timothy H. Keitt
 Maintainer: Timothy H. Keitt <tkeitt@gmail.com>
 Description: Wraps the Boost odeint library for integration of differential equations.
