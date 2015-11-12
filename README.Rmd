@@ -148,12 +148,12 @@ axis(2); axis(1); box()
 ```
 
 ```{r, fig.width = 5, fig.height = 5}
+M = 200
 # reaction-diffusion model with openmp
-# M is defined as std::sqrt(N)
+# M is defined internally as std::sqrt(sys_dim)
 # laplace2D is built into the template
 # Note that openmp can be slower
 # It requires tuning
-M = 200
 bistable = '
 #pragma omp parallel for
 for (int i = 0; i < M; ++i)
