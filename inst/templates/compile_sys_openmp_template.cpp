@@ -18,7 +18,6 @@ __HEADERS__;
 namespace odeintr
 {
   static const int N = __SYS_SIZE__;
-  static const int M = std::sqrt(N);
 
   typedef std::vector<double> state_type;
   
@@ -34,30 +33,7 @@ namespace odeintr
   
   __GLOBALS__;
   
-  static int
-  bound(int x){
-    int res = x % M;
-    return res < 0 ? M + res : res;}
-  
-  static double
-  d_left(const state_type& x, const int i, const int j){
-    return x[i * M + bound(j - 1)] - x[i * M + j];}
-  
-  static double
-  d_up(const state_type& x, const int i, const int j){
-    return x[bound(i - 1) * M + j] - x[i * M + j];}
-
-  static double
-  d_right(const state_type& x, const int i, const int j){
-    return x[i * M + bound(j + 1)] - x[i * M + j];}
-
-  static double
-  d_down(const state_type& x, const int i, const int j){
-    return x[bound(i + 1) * M + j] - x[i * M + j];}
-  
-  static double
-  laplace2D(const state_type& x, const int i, const int j){
-    return d_left(x, i, j) + d_up(x, i, j) + d_right(x, i, j) + d_down(x, i, j);}
+  #include "utils.h"
   
   static void
   sys(const state_type x, state_type &dxdt, const double t)
