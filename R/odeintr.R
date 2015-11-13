@@ -164,7 +164,7 @@ integrate_sys = function(sys, init, duration,
 #' named parameters will be declared const. Otherwise
 #' parameter getter/setter functions will be defined.
 #' 
-#' If \code{observer} is a function, then this function will
+#' If \code{observer} is an R function, then this function will
 #' be used to record the output of the integration. It is called
 #' with signature \code{obsever(x, t)}. Its return value will
 #' be coerced to a list. Observer getter/setter functions will be
@@ -341,8 +341,8 @@ compile_sys = function(name, sys,
     {
       if (!is.null(observer))
       {
-        try(do.call(paste0(name, "_set_observer"), list(f = observer)))
-        try(do.call(paste0(name, "_set_output_processor"), list(f = proc_output)))
+        do.call(paste0(name, "_set_observer"), list(f = observer), env = env)
+        do.call(paste0(name, "_set_output_processor"), list(f = proc_output), env = env)
       }
       if (name %in% search())
         detach(pos = match(name, search()))
