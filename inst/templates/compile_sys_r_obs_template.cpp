@@ -31,6 +31,8 @@ namespace odeintr
   
   __GLOBALS__;
   
+  #include "utils.h"
+  
   static void
   sys(const state_type x, state_type &dxdt, const double t)
   {
