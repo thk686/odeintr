@@ -4,7 +4,7 @@
 #include <Rcpp.h>
 // [[Rcpp::plugins(cpp11)]]
 
-// [[Rcpp::depends(odeintr)]]
+// [[Rcpp::depends(BH)]]
 #include "boost/numeric/odeint.hpp"
 namespace odeint = boost::numeric::odeint;
 

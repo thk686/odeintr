@@ -2,6 +2,7 @@
 // See license for odeintr package
 
 // [[Rcpp::depends(odeintr)]]
+// [[Rcpp::depends(BH)]]
 
 #include <Rcpp.h>
 // [[Rcpp::plugins(cpp11)]]

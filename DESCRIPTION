@@ -10,6 +10,6 @@ URL: https://github.com/thk686/odeintr
 BugReports: https://github.com/thk686/odeintr/issues
 License: GPL (>= 2)
 Imports: Rcpp (>= 0.10.0)
-LinkingTo: Rcpp
+LinkingTo: Rcpp, BH
 Suggests: knitr
 VignetteBuilder: knitr
