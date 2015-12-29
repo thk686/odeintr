@@ -341,8 +341,8 @@ compile_sys = function(name, sys,
     {
       if (!is.null(observer))
       {
-        do.call(paste0(name, "_set_observer"), list(f = observer), env = env)
-        do.call(paste0(name, "_set_output_processor"), list(f = proc_output), env = env)
+        do.call(paste0(name, "_set_observer"), list(f = observer), envir = env)
+        do.call(paste0(name, "_set_output_processor"), list(f = proc_output), envir = env)
       }
       if (name %in% search())
         detach(pos = match(name, search()))
