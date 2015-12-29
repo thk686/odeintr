@@ -1,6 +1,8 @@
 // Copyright Timothy H. Keitt 2015
 // See license for odeintr package
 
+// [[Rcpp::depends(odeintr)]]
+
 #include <Rcpp.h>
 // [[Rcpp::plugins(cpp11)]]
 
