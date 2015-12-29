@@ -44,7 +44,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.098   0.019   0.143
+##     0.1     0.0     0.1
 ```
 
 ```r
@@ -60,7 +60,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.000   0.000   0.001
+##       0       0       0
 ```
 
 ```r
@@ -79,7 +79,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.264   0.065   0.500
+##   0.192   0.004   0.195
 ```
 
 ```r
@@ -108,7 +108,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.020   0.001   0.027
+##    0.02    0.00    0.02
 ```
 
 ```r
@@ -129,7 +129,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.007   0.000   0.007
+##   0.004   0.000   0.003
 ```
 
 ```r
@@ -268,7 +268,7 @@ system.time({x = bistable_at(inic, at)})
 
 ```
 ##    user  system elapsed 
-## 132.031   5.479 145.730
+## 360.006   0.076  52.823
 ```
 
 ```r
@@ -290,7 +290,7 @@ f = function(x, t) image(matrix(x, M, M), asp = 1, axes = F,
                         col = grey(seq(0.1, 1, len = 100)), main = round(t))
 compile_sys("bistable", bistable, sys_dim = M * M,
              pars = c(D = 0.1, a = 1.0, b = 1/2),
-             const = TRUE, observer = f)
+             const = TRUE, observer = f, rebuild = TRUE)
 at = 10 ^ seq(0, 3, len = 10)
 inic = rbinom(M * M, 1, 1/2)
 bistable_at(inic, at)
