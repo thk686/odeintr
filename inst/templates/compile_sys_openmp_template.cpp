@@ -44,7 +44,8 @@ namespace odeintr
   static void
   obs(const state_type x, const double t)
   {
-    for (int i = 0; i != N; ++i)
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i)
       rec_x[i].push_back(x[i]);
     rec_t.push_back(t);
   }
@@ -63,7 +64,8 @@ Rcpp::List __FUNCNAME___get_output()
 {
   Rcpp::List out;
   out("Time") = Rcpp::wrap(odeintr::rec_t);
-  for (int i = 0; i != odeintr::N; ++i)
+  #pragma omp parallel for
+  for (int i = 0; i < odeintr::N; ++i)
   {
     auto cnam = std::string("X") + std::to_string(i + 1);
     out(cnam) = Rcpp::wrap(odeintr::rec_x[i]);
