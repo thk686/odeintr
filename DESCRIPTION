@@ -5,11 +5,16 @@ Version: 1.6
 Date: 2015-12-29
 Author: Timothy H. Keitt
 Maintainer: Timothy H. Keitt <tkeitt@gmail.com>
-Description: Wraps the Boost odeint library for integration of differential equations.
+Description: Wraps the Boost odeint library for integration of differential
+    equations.
 URL: https://github.com/thk686/odeintr
 BugReports: https://github.com/thk686/odeintr/issues
 License: GPL (>= 2)
-Imports: Rcpp (>= 0.10.0)
+Imports:
+    Rcpp (>= 0.10.0)
 LinkingTo: Rcpp, BH
-Suggests: knitr
+Suggests:
+    knitr,
+    testthat
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1
