@@ -5,5 +5,4 @@
 ^README\.html$
 ^README_files$
 ^include$
-
 ^appveyor\.yml$
