@@ -2,7 +2,7 @@
 Timothy H. Keitt  
 `r format(Sys.time(), '%d %B, %Y')`  
 
-[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) [![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html)
+[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) [![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
 
 The odeintr is package for integrating differential equations in R. The integration engine is
 the [Boost odeint package](http://www.odeint.com).
@@ -29,10 +29,6 @@ install.packages(odeintr)                   # released
 devtools::install_github("thk686/odeintr")  # development
 ```
 
-There have been some problems compiling on Windows owing to an incompatibility between
-the `BH` package and `RTools` toolchain. I have removed the dependency on the `BH`
-package. If you have trouble with Windows, please try the development version.
-
 ### Examples
 
 
@@ -44,14 +40,14 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.093   0.016   0.109
+##   0.091   0.004   0.097
 ```
 
 ```r
 plot(x, type = "l", lwd = 3, col = "steelblue", main = "Logistic Growth")
 ```
 
-![](README_files/figure-html/unnamed-chunk-1-1.png) 
+![](README_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
 
 ```r
 compile_sys("logistic", "dxdt = x * (1 - x)")
@@ -60,7 +56,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.000   0.000   0.001
+##   0.000   0.001   0.001
 ```
 
 ```r
@@ -68,7 +64,7 @@ plot(x, type = "l", lwd = "3", col = "steelblue", main = "Logistic Growth")
 points(logistic_at(0.001, sort(runif(10, 0, 15)), 0.01), col = "darkred")
 ```
 
-![](README_files/figure-html/unnamed-chunk-1-2.png) 
+![](README_files/figure-html/unnamed-chunk-1-2.png)<!-- -->
 
 
 ```r
@@ -79,20 +75,20 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.295   0.042   0.473
+##   0.174   0.010   0.189
 ```
 
 ```r
 plot(x[, c(2, 3)], type = "l", lwd = 2, col = "steelblue", main = "Lotka-Volterra Phase Plot")
 ```
 
-![](README_files/figure-html/unnamed-chunk-2-1.png) 
+![](README_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
 
 ```r
 plot(x[, c(1, 4)], type = "l", lwd = 2, col = "steelblue", main = "Prey-Predator Ratio")
 ```
 
-![](README_files/figure-html/unnamed-chunk-2-2.png) 
+![](README_files/figure-html/unnamed-chunk-2-2.png)<!-- -->
 
 
 ```r
@@ -108,14 +104,14 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.009   0.012   0.033
+##   0.032   0.005   0.037
 ```
 
 ```r
 plot(x[, c(2, 4)], type = 'l', col = "steelblue", main = "Lorenz Attractor")
 ```
 
-![](README_files/figure-html/unnamed-chunk-3-1.png) 
+![](README_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 
 ```r
@@ -129,7 +125,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.004   0.000   0.003
+##   0.005   0.000   0.004
 ```
 
 ```r
@@ -144,7 +140,7 @@ make.plot(x[, c(3, 2)], "X2"); axis(1); axis(4)
 title(main = "Van der Pol Oscillator", outer = TRUE)
 ```
 
-![](README_files/figure-html/unnamed-chunk-4-1.png) 
+![](README_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 
 ```r
@@ -166,7 +162,7 @@ title("Van der Pol Oscillator Parameter Sweep", outer = TRUE)
 title(xlab = "X1", ylab = "X2", line = 0, outer = TRUE)
 ```
 
-![](README_files/figure-html/unnamed-chunk-5-1.png) 
+![](README_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 
 ```r
@@ -194,54 +190,35 @@ plot(x[, 1:2], type = "l", lwd = 2, col = "steelblue")
 lines(x[, c(1, 3)], lwd = 2, col = "darkred")
 ```
 
-![](README_files/figure-html/unnamed-chunk-6-1.png) 
+![](README_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
+The ```compile_implicit``` code is not working with the latest odeint. I've submitted an issue on github.
 
 
 ```r
 # Robertson chemical kinetics problem
-Robertson = '
-dxdt[0] = -alpha * x[0] + beta * x[1] * x[2];
-dxdt[1] = alpha * x[0] - beta * x[1] * x[2] - gamma * x[1] * x[1];
-dxdt[2] = gamma * x[1] * x[1];
-' # Robertson
-pars = c(alpha = 0.04, beta = 1e4, gamma = 3e7)
-init.cond = c(1, 0, 0)
-cat(JacobianCpp(Robertson))
+# Robertson = '
+# dxdt[0] = -alpha * x[0] + beta * x[1] * x[2];
+# dxdt[1] = alpha * x[0] - beta * x[1] * x[2] - gamma * x[1] * x[1];
+# dxdt[2] = gamma * x[1] * x[1];
+# ' # Robertson
+# pars = c(alpha = 0.04, beta = 1e4, gamma = 3e7)
+# init.cond = c(1, 0, 0)
+# cat(JacobianCpp(Robertson))
+# compile_implicit("robertson", Robertson, pars, TRUE)
+# at = 10 ^ seq(-5, 5, len = 400)
+# x = robertson_at(init.cond, at)
+# par(mfrow = c(3, 1), mar = rep(0.5, 4), oma = rep(5, 4), xpd = NA)
+# plot(x[, 1:2], type = "l", lwd = 3,
+#      col = "steelblue", log = "x", axes = F, xlab = NA)
+# axis(2); box()
+# plot(x[, c(1, 3)], type = "l", lwd = 3,
+#      col = "steelblue", log = "x", axes = F, xlab = NA)
+# axis(4); box()
+# plot(x[, c(1, 4)], type = "l", lwd = 3,
+#      col = "steelblue", log = "x", axes = F)
+# axis(2); axis(1); box()
 ```
-
-```
-## J(0, 0) = -alpha;
-## J(0, 1) = beta * x[2];
-## J(0, 2) = beta * x[1];
-## J(1, 0) = alpha;
-## J(1, 1) = -(beta * x[2] + (gamma * x[1] + gamma * x[1]));
-## J(1, 2) = -(beta * x[1]);
-## J(2, 0) = 0;
-## J(2, 1) = gamma * x[1] + gamma * x[1];
-## J(2, 2) = 0;
-## dfdt[0] = 0.0;
-## dfdt[1] = 0.0;
-## dfdt[2] = 0.0;
-```
-
-```r
-compile_implicit("robertson", Robertson, pars, TRUE)
-at = 10 ^ seq(-5, 5, len = 400)
-x = robertson_at(init.cond, at)
-par(mfrow = c(3, 1), mar = rep(0.5, 4), oma = rep(5, 4), xpd = NA)
-plot(x[, 1:2], type = "l", lwd = 3,
-     col = "steelblue", log = "x", axes = F, xlab = NA)
-axis(2); box()
-plot(x[, c(1, 3)], type = "l", lwd = 3,
-     col = "steelblue", log = "x", axes = F, xlab = NA)
-axis(4); box()
-plot(x[, c(1, 4)], type = "l", lwd = 3,
-     col = "steelblue", log = "x", axes = F)
-axis(2); axis(1); box()
-```
-
-![](README_files/figure-html/unnamed-chunk-7-1.png) 
 
 ### Performance
 
