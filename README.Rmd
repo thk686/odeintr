@@ -118,7 +118,7 @@ plot(x[, 1:2], type = "l", lwd = 2, col = "steelblue")
 lines(x[, c(1, 3)], lwd = 2, col = "darkred")
 ```
 
-The ```compile_implicit``` code is not working with the latest odeint. I've submitted an issue on github.
+The example below is not working with the latest version of odeint that comes with the BH package. I've submitted and issue on github.
 
 ```{r, fig.width = 5, fig.height = 5}
 # Robertson chemical kinetics problem
@@ -143,6 +143,13 @@ The ```compile_implicit``` code is not working with the latest odeint. I've subm
 # plot(x[, c(1, 4)], type = "l", lwd = 3,
 #      col = "steelblue", log = "x", axes = F)
 # axis(2); axis(1); box()
+```
+
+It is important to understand that the only thing that ```odeintr``` does is to generate C++ code and compile it using Rcpp. That means you can use the generated code as a starting point for your project and modify as you wish.
+
+```{r}
+the_code = compile_sys("logitest", "dxdt = x * (1 - x)", compile = FALSE)
+cat(the_code)
 ```
 
 ### Performance

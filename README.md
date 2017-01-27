@@ -41,7 +41,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.129   0.009   0.147
+##   0.083   0.003   0.087
 ```
 
 ```r
@@ -57,7 +57,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.000
+##   0.000   0.000   0.001
 ```
 
 ```r
@@ -76,7 +76,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.207   0.010   0.229
+##   0.182   0.008   0.199
 ```
 
 ```r
@@ -105,7 +105,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.024   0.004   0.028
+##   0.027   0.002   0.029
 ```
 
 ```r
@@ -126,7 +126,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.006   0.000   0.007
+##   0.004   0.000   0.005
 ```
 
 ```r
@@ -193,7 +193,7 @@ lines(x[, c(1, 3)], lwd = 2, col = "darkred")
 
 ![](README_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
-The ```compile_implicit``` code is not working with the latest odeint. I've submitted an issue on github.
+The example below is not working with the latest version of odeint that comes with the BH package. I've submitted and issue on github.
 
 
 ```r
@@ -219,6 +219,185 @@ The ```compile_implicit``` code is not working with the latest odeint. I've subm
 # plot(x[, c(1, 4)], type = "l", lwd = 3,
 #      col = "steelblue", log = "x", axes = F)
 # axis(2); axis(1); box()
+```
+
+It is important to understand that the only thing that ```odeintr``` does is to generate C++ code and compile it using Rcpp. That means you can use the generated code as a starting point for your project and modify as you wish.
+
+
+```r
+the_code = compile_sys("logitest", "dxdt = x * (1 - x)", compile = FALSE)
+cat(the_code)
+```
+
+```
+## // Copyright Timothy H. Keitt 2015
+## // See license for odeintr package
+## 
+## // [[Rcpp::depends(odeintr)]]
+## 
+## #include <Rcpp.h>
+## // [[Rcpp::plugins(cpp11)]]
+## 
+## // [[Rcpp::depends(BH)]]
+## #include "boost/numeric/odeint.hpp"
+## namespace odeint = boost::numeric::odeint;
+## 
+## ;
+## 
+## namespace odeintr
+## {
+##   static const std::size_t N = 1;
+## 
+##   typedef std::vector<double> state_type;
+##   
+##   static state_type state(N);
+##   
+##   typedef odeint::runge_kutta_dopri5<state_type> stepper_type;
+##   
+##   static auto stepper = odeint::make_dense_output(1e-06, 1e-06, stepper_type());
+##   
+##   typedef std::vector<double> vec_type;
+##   static std::vector<vec_type> rec_x(N);
+##   static vec_type rec_t;
+##   
+##   ;
+##   
+##   #include "utils.h"
+##   
+##   static void
+##   sys(const state_type x, state_type &dxdt, const double t)
+##   {
+##     dxdt[0] = x[0] * (1 - x[0]);
+##   }
+## 
+##   static void
+##   obs(const state_type x, const double t)
+##   {
+##     for (int i = 0; i != N; ++i)
+##       rec_x[i].push_back(x[i]);
+##     rec_t.push_back(t);
+##   }
+##   
+## }; // namespace odeintr
+## 
+## static void
+## reserve(odeintr::vec_type::size_type n)
+## {
+##   odeintr::rec_t.reserve(n);
+##   for (auto &i : odeintr::rec_x) i.reserve(n);
+## }
+## 
+## // [[Rcpp::export]]
+## Rcpp::List logitest_get_output()
+## {
+##   Rcpp::List out;
+##   out("Time") = Rcpp::wrap(odeintr::rec_t);
+##   for (int i = 0; i != odeintr::N; ++i)
+##   {
+##     auto cnam = std::string("X") + std::to_string(i + 1);
+##     out(cnam) = Rcpp::wrap(odeintr::rec_x[i]);
+##   }
+##   out.attr("class") = "data.frame";
+##   int rows_out = odeintr::rec_t.size();
+##   auto rn = Rcpp::IntegerVector::create(NA_INTEGER, -rows_out);
+##   out.attr("row.names") = rn;
+##   return out;
+## };
+## 
+## // [[Rcpp::export]]
+## void logitest_set_state(Rcpp::NumericVector new_state)
+## {
+##   if (new_state.size() != odeintr::N)
+##     Rcpp::stop("Invalid initial state");
+##   std::copy(new_state.begin(),
+##             new_state.end(),
+##             odeintr::state.begin());
+## }
+## 
+## // [[Rcpp::export]]
+## std::vector<double>
+## logitest_get_state()
+## {
+##   return odeintr::state;
+## }
+## 
+## // [[Rcpp::export]]
+## void logitest_reset_observer()
+## {
+##   for (auto &i : odeintr::rec_x) i.resize(0);
+##   odeintr::rec_t.resize(0);  
+## }
+## 
+## // [[Rcpp::export]]
+## Rcpp::List logitest_adap(Rcpp::NumericVector init,
+##                              double duration,
+##                              double step_size = 1.0,
+##                              double start = 0.0)
+## {
+##   logitest_set_state(init);
+##   logitest_reset_observer(); reserve(duration / step_size);
+##   odeint::integrate_adaptive(odeintr::stepper, odeintr::sys, odeintr::state,
+##                              start, start + duration, step_size,
+##                              odeintr::obs);
+##   return logitest_get_output();
+## }
+## 
+## // [[Rcpp::export]]
+## Rcpp::List logitest_at(Rcpp::NumericVector init,
+##                            std::vector<double> times,
+##                            double step_size = 1.0,
+##                            double start = 0.0)
+## {
+##   logitest_set_state(init);
+##   logitest_reset_observer(); reserve(times.size());
+##   odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
+##                           start, times[0], step_size);
+##   odeint::integrate_times(odeintr::stepper, odeintr::sys, odeintr::state,
+##                           times.begin(), times.end(), step_size, odeintr::obs);
+##   return logitest_get_output();
+## }
+## 
+## // [[Rcpp::export]]
+## Rcpp::List
+## logitest_continue_at(std::vector<double> times, double step_size = 1.0)
+## {
+##   double start = odeintr::rec_t.back();
+##   logitest_reset_observer(); reserve(odeintr::rec_t.size() + times.size());
+##   odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
+##                           start, times[0], step_size);
+##   odeint::integrate_times(odeintr::stepper, odeintr::sys, odeintr::state,
+##                           times.begin(), times.end(), step_size, odeintr::obs);
+##   return logitest_get_output();
+## }
+## 
+## // [[Rcpp::export]]
+## Rcpp::List logitest(Rcpp::NumericVector init,
+##                        double duration,
+##                        double step_size = 1.0,
+##                        double start = 0.0)
+## {
+##   logitest_set_state(init);
+##   logitest_reset_observer(); reserve(duration / step_size);
+##   odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
+##                           start, start + duration, step_size,
+##                           odeintr::obs);
+##   return logitest_get_output();
+## }
+## 
+## // [[Rcpp::export]]
+## std::vector<double>
+## logitest_no_record(Rcpp::NumericVector init,
+##                        double duration,
+##                        double step_size = 1.0,
+##                        double start = 0.0)
+## {
+##   logitest_set_state(init);
+##   odeint::integrate_adaptive(odeintr::stepper, odeintr::sys, odeintr::state,
+##                              start, start + duration, step_size);
+##   return logitest_get_state();
+## }
+## 
+## ;
 ```
 
 ### Performance
