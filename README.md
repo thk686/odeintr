@@ -2,7 +2,8 @@
 Timothy H. Keitt  
 `r format(Sys.time(), '%d %B, %Y')`  
 
-[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) [![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
+[![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
+[![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) 
 
 The odeintr is package for integrating differential equations in R. The integration engine is
 the [Boost odeint package](http://www.odeint.com).
@@ -40,7 +41,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.091   0.004   0.097
+##   0.129   0.009   0.147
 ```
 
 ```r
@@ -56,7 +57,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.000   0.001   0.001
+##   0.001   0.000   0.000
 ```
 
 ```r
@@ -75,7 +76,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.174   0.010   0.189
+##   0.207   0.010   0.229
 ```
 
 ```r
@@ -104,7 +105,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.032   0.005   0.037
+##   0.024   0.004   0.028
 ```
 
 ```r
@@ -125,7 +126,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.005   0.000   0.004
+##   0.006   0.000   0.007
 ```
 
 ```r
