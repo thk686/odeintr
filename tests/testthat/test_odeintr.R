@@ -1,10 +1,13 @@
 library(odeintr)
 context("Solvers")
 
+Sys.setenv(R_TESTS = "")
+
 wd = getwd()
 wd = sub(".tests.testthat$", "", wd)
-ipath = file.path(wd, "inst", "include")
-Sys.setenv(PKG_CXXFLAGS = paste0("-I", ipath))
+ipath1 = file.path(wd, "inst", "include")
+ipath2 = file.path(wd, "include")
+Sys.setenv(PKG_CXXFLAGS = paste(paste0("-I", ipath1), paste0("-I", ipath2)))
 
 test_that("integrate_sys works", {
   res = integrate_sys(function(x, t) x * (1 - x), 0.01, 40)
