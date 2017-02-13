@@ -10,7 +10,7 @@ ipath2 = file.path(wd, "include")
 ipath3 = system.file("include", package = "odeintr")
 Sys.setenv(PKG_CXXFLAGS = paste(paste0("-I", ipath1),
                                 paste0("-I", ipath2),
-                                paste0("-I", ipath3)))
+                                if (nzchar(ipath3)) paste0("-I", ipath3)))
 
 test_that("integrate_sys works", {
   res = integrate_sys(function(x, t) x * (1 - x), 0.01, 40)
