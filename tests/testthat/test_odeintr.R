@@ -3,6 +3,7 @@ context("Solvers")
 
 Sys.setenv(R_TESTS = "")
 
+# Try to find package header file *somewhere*
 wd = getwd()
 wd = sub(".tests.testthat$", "", wd)
 ipath1 = file.path(wd, "inst", "include")
