@@ -41,7 +41,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.105   0.004   0.109
+##   0.109   0.005   0.120
 ```
 
 ```r
@@ -57,7 +57,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##       0       0       0
+##   0.000   0.000   0.001
 ```
 
 ```r
@@ -76,7 +76,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.165   0.007   0.172
+##   0.170   0.007   0.177
 ```
 
 ```r
@@ -126,7 +126,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.003   0.001   0.003
+##   0.003   0.001   0.004
 ```
 
 ```r
