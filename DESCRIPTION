@@ -10,7 +10,9 @@ Description: Wraps the Boost odeint library for integration of differential
 URL: https://github.com/thk686/odeintr
 BugReports: https://github.com/thk686/odeintr/issues
 License: GPL (>= 2)
-Imports: Rcpp (>= 0.10.0)
+Imports:
+    Rcpp (>= 0.10.0),
+    BH (>= 1.60.0)
 LinkingTo: Rcpp, BH
 Suggests:
     testthat
