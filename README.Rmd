@@ -1,13 +1,13 @@
 ---
 title: "odeintr"
 author: "Timothy H. Keitt"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: "Feb 14, 2017"
 output:
   html_document:
     keep_md: yes
 ---
 
-[![CRAN Version](https://www.r-pkg.org/badges/version/odeintr)](https://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/odeintr)](https://cran.rstudio.com/web/packages/odeintr/index.html) [![AppVeyor Build Status](httpss://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
+[![CRAN Version](https://www.r-pkg.org/badges/version/odeintr)](https://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/odeintr)](https://cran.rstudio.com/web/packages/odeintr/index.html) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
 [![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) 
 
 The odeintr is package for integrating differential equations in R. The integration engine is
