@@ -15,7 +15,5 @@ Imports:
     BH (>= 1.60.0)
 LinkingTo: Rcpp, BH
 Suggests:
-    knitr,
     testthat
-VignetteBuilder: knitr
 RoxygenNote: 5.0.1
