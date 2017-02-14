@@ -19,11 +19,11 @@
 #' defining the system and an observer function to record
 #' the output in a data frame or list.
 #' 
-#' @author Timothy H. Keitt \cr \url{http://www.keittlab.org/} \cr \cr
+#' @author Timothy H. Keitt \cr \url{https://www.keittlab.org/} \cr \cr
 #' 
 #' Timothy H. Keitt \email{tkeitt@@gmail.com} \cr
 #' 
-#' @references \url{http://github.com/thk686/odeintr}, \url{http://headmyshoulder.github.io/odeint-v2/}
+#' @references \url{https://github.com/thk686/odeintr}, \url{https://headmyshoulder.github.io/odeint-v2/}
 #' 
 #' @keywords package
 #' 
@@ -201,7 +201,7 @@ integrate_sys = function(sys, init, duration,
 #' \code{bs} \tab \code{bulirsch_stoer} \tab Adaptive \cr
 #' \code{bsd} \tab \code{bulirsch_stoer_dense_out} \tab Interpolating adaptive}
 #' 
-#' These steppers are described at \href{http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview}{here}.
+#' These steppers are described at \href{https://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview}{here}.
 #' 
 #' @note The c++11 plugin is enabled.
 #'  
