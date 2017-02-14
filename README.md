@@ -1,19 +1,19 @@
 # odeintr
 Timothy H. Keitt  
-`r format(Sys.time(), '%d %B, %Y')`  
+Feb 14, 2017  
 
-[![CRAN Version](http://www.r-pkg.org/badges/version/odeintr)](http://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/odeintr)](http://cran.rstudio.com/web/packages/odeintr/index.html) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
+[![CRAN Version](https://www.r-pkg.org/badges/version/odeintr)](https://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/odeintr)](https://cran.rstudio.com/web/packages/odeintr/index.html) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
 [![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) 
 
 The odeintr is package for integrating differential equations in R. The integration engine is
-the [Boost odeint package](http://www.odeint.com).
+the [Boost odeint package](https://www.odeint.com).
 
 ### Features
 
 1. Simple specification of the ODE system
 1. Named, dynamic run-time setable system parameters
 1. Intelligent defaults, easily overridden, used throughout
-1. A wide range of integration methods available for compiled system (see [stepper types](http://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
+1. A wide range of integration methods available for compiled system (see [stepper types](https://www.boost.org/doc/libs/1_58_0/libs/numeric/odeint/doc/html/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview))
 1. Fully automated compilation of ODE system specified in C++
 1. ~~Simple openmp vectorization of large systems~~ (Broken in latest Boost release)
 1. Results returned as a simple data frame ready for analysis and plotting
@@ -41,7 +41,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.109   0.005   0.120
+##   0.092   0.003   0.096
 ```
 
 ```r
@@ -76,7 +76,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.170   0.007   0.177
+##   0.163   0.007   0.178
 ```
 
 ```r
@@ -105,7 +105,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.022   0.002   0.024
+##   0.026   0.003   0.029
 ```
 
 ```r
@@ -126,7 +126,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.003   0.001   0.004
+##   0.003   0.000   0.003
 ```
 
 ```r
