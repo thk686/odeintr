@@ -5,3 +5,4 @@
 ^README\.html$
 ^README_files$
 ^appveyor\.yml$
+^cran-comments\.md$
