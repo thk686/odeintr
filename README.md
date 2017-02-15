@@ -2,7 +2,7 @@
 Timothy H. Keitt  
 Feb 14, 2017  
 
-[![CRAN Version](https://www.r-pkg.org/badges/version/odeintr)](https://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/odeintr)](https://cran.r-project.org/web/packages/odeintr/index.html) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
+[![CRAN Version](https://www.r-pkg.org/badges/version/odeintr)](https://www.r-pkg.org/badges/version/odeintr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/odeintr)](https://cran.r-project.org/package=odeintr) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/thk686/odeintr?branch=master&svg=true)](https://ci.appveyor.com/project/thk686/odeintr)
 [![Travis-CI Build Status](https://travis-ci.org/thk686/odeintr.svg?branch=master)](https://travis-ci.org/thk686/odeintr) 
 
 The odeintr is package for integrating differential equations in R. The integration engine is
@@ -41,7 +41,7 @@ system.time({x = integrate_sys(dxdt, 0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.065   0.003   0.081
+##   0.113   0.005   0.118
 ```
 
 ```r
@@ -57,7 +57,7 @@ system.time({x = logistic(0.001, 15, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.001   0.000   0.000
+##       0       0       0
 ```
 
 ```r
@@ -76,7 +76,7 @@ system.time({x = integrate_sys(dxdt, rep(2, 2), 20, 0.01, observer = obs)})
 
 ```
 ##    user  system elapsed 
-##   0.123   0.008   0.141
+##   0.167   0.005   0.173
 ```
 
 ```r
@@ -105,7 +105,7 @@ system.time({x = lorenz(rep(1, 3), 100, 0.001)})
 
 ```
 ##    user  system elapsed 
-##   0.017   0.002   0.020
+##   0.022   0.002   0.024
 ```
 
 ```r
@@ -126,7 +126,7 @@ system.time({x = vanderpol(rep(1e-4, 2), 100, 0.01)})
 
 ```
 ##    user  system elapsed 
-##   0.002   0.000   0.003
+##   0.003   0.000   0.004
 ```
 
 ```r

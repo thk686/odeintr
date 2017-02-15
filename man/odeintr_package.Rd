@@ -24,13 +24,12 @@ The function \code{integrate_sys} accepts an R function
 defining the system and an observer function to record
 the output in a data frame or list.
 }
+\references{
+\url{https://github.com/thk686/odeintr}, \url{https://headmyshoulder.github.io/odeint-v2/}
+}
 \author{
 Timothy H. Keitt \cr \url{http://www.keittlab.org/} \cr \cr
 
 Timothy H. Keitt \email{tkeitt@gmail.com} \cr
 }
-\references{
-\url{https://github.com/thk686/odeintr}, \url{https://headmyshoulder.github.io/odeint-v2/}
-}
 \keyword{package}
-

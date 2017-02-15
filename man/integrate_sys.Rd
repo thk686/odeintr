@@ -72,10 +72,9 @@ x = integrate_sys(Lorenz.sys, rep(1, 3), 100, 0.01)
 plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 }
 }
-\author{
-Timothy H. Keitt
-}
 \seealso{
 \code{\link{compile_sys}}
 }
-
+\author{
+Timothy H. Keitt
+}

@@ -204,10 +204,9 @@ x = lorenz(rep(1, 3), 100, 0.001)
 plot(x[, c(2, 4)], type = 'l', col = "steelblue")
 }
 }
-\author{
-Timothy H. Keitt
-}
 \seealso{
 \code{\link{set_optimization}}, \code{\link{integrate_sys}}
 }
-
+\author{
+Timothy H. Keitt
+}

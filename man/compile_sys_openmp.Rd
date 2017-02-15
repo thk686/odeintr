@@ -78,10 +78,9 @@ for (i in 1:4){
 }
 
 }
-\author{
-Timothy H. Keitt
-}
 \seealso{
 \code{\link{set_optimization}}, \code{\link{compile_sys}}
 }
-
+\author{
+Timothy H. Keitt
+}
