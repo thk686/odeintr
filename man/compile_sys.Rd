@@ -167,7 +167,7 @@ Code \tab Stepper \tab Type \cr
 \code{bs} \tab \code{bulirsch_stoer} \tab Adaptive \cr
 \code{bsd} \tab \code{bulirsch_stoer_dense_out} \tab Interpolating adaptive}
 
-These steppers are described at \href{http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview}{here}.
+These steppers are described at \href{https://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/steppers.html#boost_numeric_odeint.odeint_in_detail.steppers.stepper_overview}{here}.
 }
 \note{
 The c++11 plugin is enabled.
