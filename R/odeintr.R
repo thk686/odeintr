@@ -19,7 +19,7 @@
 #' defining the system and an observer function to record
 #' the output in a data frame or list.
 #' 
-#' @author Timothy H. Keitt \cr \url{https://www.keittlab.org/} \cr \cr
+#' @author Timothy H. Keitt \cr \url{http://www.keittlab.org/} \cr \cr
 #' 
 #' Timothy H. Keitt \email{tkeitt@@gmail.com} \cr
 #' 
