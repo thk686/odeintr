@@ -26,7 +26,7 @@ test_that("integrate_sys works", {
 })
 
 test_that("compile_sys works", {
-  compile_sys("logistic", "dxdt = x * (1 - x)", env = test_env())
+  compile_sys("logistic", "dxdt = x * (1 - x)")
   res = logistic(0.01, 40)
   expect_is(res, "data.frame")
   expect_equal(dim(res), c(41, 2))
@@ -34,7 +34,7 @@ test_that("compile_sys works", {
 })
 
 test_that("compile_implicit works", {
-  compile_implicit("logi", "dxdt[0] = x[0] * (1 - x[0])", env = test_env())
+  compile_implicit("logi", "dxdt[0] = x[0] * (1 - x[0])")
   res = logi(0.01, 40)
   expect_is(res, "data.frame")
   expect_equal(dim(res), c(41, 2))
