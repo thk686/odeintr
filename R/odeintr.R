@@ -336,6 +336,7 @@ compile_sys = function(name, sys,
   code = gsub("__FUNCNAME__", name, code)
   if (compile)
   {
+    Sys.setenv(CXX_STD = "CXX11") # just in case
     res = try(Rcpp::sourceCpp(code = code, env = env, ...))
     if (!inherits(res, "try-error"))
     {
