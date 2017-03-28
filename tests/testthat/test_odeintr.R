@@ -11,7 +11,8 @@ ipath2 = file.path(wd, "include")
 ipath3 = system.file("include", package = "odeintr")
 Sys.setenv(PKG_CXXFLAGS = paste(paste0("-I\"", ipath1, "\""),
                                 paste0("-I\"", ipath2, "\""),
-                                if (nzchar(ipath3)) paste0("-I\"", ipath3, "\"")))
+                                if (nzchar(ipath3)) paste0("-I\"", ipath3, "\"")),
+           CXX_STD = "CXX11")
 
 if (file.exists(file.path(ipath1, "odeintr.h")) ||
     file.exists(file.path(ipath2, "odeintr.h")) ||
