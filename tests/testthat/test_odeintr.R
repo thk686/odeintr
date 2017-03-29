@@ -33,15 +33,15 @@ test_that("compile_sys works", {
   expect_equal(res[1, 2], 0.01)
 })
 
-test_that("compile_implicit works", {
-  compile_implicit("logi", "dxdt[0] = x[0] * (1 - x[0])")
-  res = logi(0.01, 40)
+test_that("large step size does not crash compile_sys", {
+  compile_sys("logi", "dxdt[0] = x[0] * (1 - x[0])")
+  expect_warning({res = logi(0.01, 40, 100)})
   expect_is(res, "data.frame")
-  expect_equal(dim(res), c(41, 2))
+  expect_equal(dim(res), c(4, 2))
   expect_equal(res[1, 2], 0.01)
 })
 
-test_that("large step size does not crash", {
+test_that("large step size does not crash compile_implicit", {
   compile_implicit("logi", "dxdt[0] = x[0] * (1 - x[0])")
   expect_warning({res = logi(0.01, 40, 100)})
   expect_is(res, "data.frame")
