@@ -22,3 +22,5 @@ This is a new release, so there are no reverse dependencies.
 * I have attempted to work around problems related to testthat, compiling C++11 code and r-devel. I am not sure I have fixed it, but perhaps this will work better.
 
 * I think the solution is just to remove the tests from the package using .Rbuildignore
+
+* Fixed a regexp in .Rbuildignore
