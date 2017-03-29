@@ -144,6 +144,11 @@ Rcpp::List __FUNCNAME__(Rcpp::NumericVector init,
                        double step_size = 1.0,
                        double start = 0.0)
 {
+  if (duration / step_size < 3)
+  {
+    step_size = duration / 3;
+    Rcpp::warning("Step size too large -- adjusting");
+  }
   __FUNCNAME___set_state(init);
   __FUNCNAME___reset_observer(); reserve(duration / step_size);
   odeint::integrate_const(odeintr::stepper, odeintr::sys, odeintr::state,
