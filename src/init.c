@@ -15,4 +15,5 @@ R_init_myLib(DllInfo *info)
 {
 	R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 	R_useDynamicSymbols(info, FALSE);
+	R_forceSymbols(info, TRUE);
 }

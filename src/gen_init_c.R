@@ -24,5 +24,6 @@ cat("\n\nR_CallMethodDef callMethods[]  = {\n", file = "src/init.c", append = TR
 cat(paste(cms, collapse = ",\n"), file = "src/init.c", append = TRUE)
 cat("\n\nvoid\nR_init_myLib(DllInfo *info)\n{\n", file = "src/init.c", append = TRUE)
 cat("\tR_registerRoutines(info, NULL, callMethods, NULL, NULL);\n", file = "src/init.c", append = TRUE)
-cat("\tR_useDynamicSymbols(info, FALSE);\n}", file = "src/init.c", append = TRUE)
+cat("\tR_useDynamicSymbols(info, FALSE);\n", file = "src/init.c", append = TRUE)
+cat("\tR_forceSymbols(info, TRUE);\n}", file = "src/init.c", append = TRUE)
 
