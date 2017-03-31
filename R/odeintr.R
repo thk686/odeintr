@@ -29,7 +29,7 @@
 #' 
 #' @import Rcpp
 #' 
-#' @useDynLib odeintr
+#' @useDynLib odeintr, .registration = TRUE
 #' 
 #' @docType package
 #' 
