@@ -1,0 +1,3 @@
+#!/bin/sh
+${R_HOME}/bin/Rscript src/gen_init_c.R
+exit
