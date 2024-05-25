@@ -1,3 +1,5 @@
+# This project is seeking a maintainer for CRAN
+
 # odeintr
 Timothy H. Keitt  
 Feb 14, 2017  
